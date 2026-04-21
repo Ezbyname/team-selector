@@ -68,19 +68,45 @@
             });
 
             // Rule 2: Position balance (for positions with 2+ players)
+            // IMPORTANT: Skip position balance check if players of same position are LINKED
             const positions = [...new Set(players.map(p => p.position))];
             positions.forEach(pos => {
-                const total = players.filter(p => p.position === pos).length;
+                const playersInPos = players.filter(p => p.position === pos);
+                const total = playersInPos.length;
+
                 if (total >= 2) {
+                    // Check if any two players in this position are linked
+                    let hasLinkedInPosition = false;
+                    for (let i = 0; i < playersInPos.length; i++) {
+                        for (let j = i + 1; j < playersInPos.length; j++) {
+                            if (playersInPos[i].linkedWith.includes(playersInPos[j].id)) {
+                                hasLinkedInPosition = true;
+                                break;
+                            }
+                        }
+                        if (hasLinkedInPosition) break;
+                    }
+
                     const t1Count = team1.filter(p => p.position === pos).length;
                     const t2Count = team2.filter(p => p.position === pos).length;
                     const diff = Math.abs(t1Count - t2Count);
-                    const balanced = diff <= 1; // Allow max difference of 1
-                    checks.push({
-                        rule: `Position ${pos} balance`,
-                        pass: balanced,
-                        detail: `Team1: ${t1Count}, Team2: ${t2Count}, Diff: ${diff}`
-                    });
+
+                    if (hasLinkedInPosition) {
+                        // If linked, position imbalance is ALLOWED
+                        checks.push({
+                            rule: `Position ${pos} balance (LINKED - imbalance OK)`,
+                            pass: true, // Always pass if linked
+                            detail: `Team1: ${t1Count}, Team2: ${t2Count}, Diff: ${diff} (Linked players)`
+                        });
+                    } else {
+                        // If not linked, check balance
+                        const balanced = diff <= 1; // Allow max difference of 1
+                        checks.push({
+                            rule: `Position ${pos} balance`,
+                            pass: balanced,
+                            detail: `Team1: ${t1Count}, Team2: ${t2Count}, Diff: ${diff}`
+                        });
+                    }
                 }
             });
 
