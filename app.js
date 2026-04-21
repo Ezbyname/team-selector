@@ -1,4 +1,6 @@
 // App State
+const APP_VERSION = '1.1.0';
+
 const state = {
     currentScreen: 'welcome',
     sport: null,
@@ -116,7 +118,8 @@ function showScreen(screenName) {
     };
 
     if (titles[screenName]) {
-        document.getElementById('headerTitle').textContent = titles[screenName][state.language];
+        const titleText = titles[screenName][state.language];
+        document.getElementById('headerTitle').innerHTML = `${titleText} <span style="font-size: 0.5em; opacity: 0.7;">v${APP_VERSION}</span>`;
     }
 
     // Refresh UI if needed
@@ -540,22 +543,51 @@ function balanceTeams(players, teamSize) {
     });
 
     // Assign remaining players with smart position balancing
-    const remaining = players.filter(p => !assigned.has(p.id));
+    let remaining = players.filter(p => !assigned.has(p.id));
 
-    // Sort by: stars first, then by position (to group same positions together)
-    remaining.sort((a, b) => {
-        if (a.isStar !== b.isStar) return b.isStar - a.isStar;
-        return a.position - b.position;
-    });
-
-    // Assign each remaining player to best team for position balance
+    // Group players by position
+    const positionGroups = {};
     remaining.forEach(player => {
-        const team = getBestTeam(player);
-        if (team.length < teamSize) {
-            team.push(player);
-            assigned.add(player.id);
-        }
+        const pos = player.position;
+        if (!positionGroups[pos]) positionGroups[pos] = [];
+        positionGroups[pos].push(player);
     });
+
+    // Sort each position group by star status (stars first)
+    Object.keys(positionGroups).forEach(pos => {
+        positionGroups[pos].sort((a, b) => {
+            if (a.isStar !== b.isStar) return b.isStar - a.isStar;
+            return 0;
+        });
+    });
+
+    // Interleave assignment by position to ensure balance
+    // This ensures that if we have 2 Centers, they go to different teams
+    let allAssigned = false;
+    while (!allAssigned) {
+        allAssigned = true;
+
+        // Try to assign one player from each position group
+        Object.keys(positionGroups).forEach(pos => {
+            if (positionGroups[pos].length > 0) {
+                const player = positionGroups[pos].shift();
+                const team = getBestTeam(player);
+                if (team.length < teamSize) {
+                    team.push(player);
+                    assigned.add(player.id);
+                    allAssigned = false;
+                } else {
+                    // If can't add to best team, try the other
+                    const otherTeam = team === team1 ? team2 : team1;
+                    if (otherTeam.length < teamSize) {
+                        otherTeam.push(player);
+                        assigned.add(player.id);
+                        allAssigned = false;
+                    }
+                }
+            }
+        });
+    }
 
     return [team1, team2];
 }
