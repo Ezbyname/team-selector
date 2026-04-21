@@ -4,6 +4,7 @@
  */
 
 import { normalizePhone, formatPhone, isValidPhone } from './lib/phone.js';
+import { supabase } from './lib/supabase.js';
 
 // ANSI color codes for terminal output
 const colors = {
@@ -118,6 +119,42 @@ function warn(condition, message) {
   if (!condition) {
     log.warning(message);
     stats.warnings++;
+  }
+}
+
+// ============================================================================
+// CLEANUP: Remove test data from previous runs
+// ============================================================================
+
+async function cleanupTestData() {
+  log.info('Cleaning up test data from previous runs...');
+
+  const phoneNormalized = normalizePhone(TEST_PHONE);
+
+  try {
+    // Delete test user (cascade will delete sessions)
+    const { error: userError } = await supabase
+      .from('auth_users')
+      .delete()
+      .eq('phone_normalized', phoneNormalized);
+
+    if (userError && !userError.message.includes('No rows found')) {
+      log.warning(`Cleanup warning (auth_users): ${userError.message}`);
+    }
+
+    // Delete OTP codes for test phone
+    const { error: otpError } = await supabase
+      .from('otp_codes')
+      .delete()
+      .eq('phone_normalized', phoneNormalized);
+
+    if (otpError && !otpError.message.includes('No rows found')) {
+      log.warning(`Cleanup warning (otp_codes): ${otpError.message}`);
+    }
+
+    log.success('Test data cleaned up successfully');
+  } catch (error) {
+    log.warning(`Cleanup error: ${error.message}`);
   }
 }
 
@@ -590,6 +627,10 @@ async function runAllTests() {
   log.info(`Environment: ${process.env.NODE_ENV || 'production'}`);
 
   try {
+    // Clean up test data before starting
+    await cleanupTestData();
+    console.log();
+
     await testPhoneNormalization();
     await testOTPFlow();
     await testRegistration();
