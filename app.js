@@ -1,5 +1,5 @@
 // App State
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 
 const state = {
     currentScreen: 'welcome',
@@ -478,53 +478,43 @@ function balanceTeams(players, teamSize) {
     const team2 = [];
     const assigned = new Set();
 
-    // Helper function to count positions in a team
-    function countPositions(team) {
-        const counts = {};
-        team.forEach(p => {
-            counts[p.position] = (counts[p.position] || 0) + 1;
-        });
-        return counts;
+    // Helper: Count how many players of each position in a team
+    function getPositionCount(team, position) {
+        return team.filter(p => p.position === position).length;
     }
 
-    // Helper function to get best team for a player based on position balance
-    function getBestTeam(player) {
+    // Helper: Get which team should get this player for best balance
+    function getBestTeamForPlayer(player) {
+        // If one team is full, use the other
         if (team1.length >= teamSize) return team2;
         if (team2.length >= teamSize) return team1;
 
-        // If player has no position (0), just balance by count
-        if (player.position === 0) {
-            return team1.length <= team2.length ? team1 : team2;
-        }
+        // Count this position in both teams
+        const pos1 = getPositionCount(team1, player.position);
+        const pos2 = getPositionCount(team2, player.position);
 
-        const counts1 = countPositions(team1);
-        const counts2 = countPositions(team2);
+        // Prefer team with fewer of this position
+        if (pos1 < pos2) return team1;
+        if (pos2 < pos1) return team2;
 
-        const posCount1 = counts1[player.position] || 0;
-        const posCount2 = counts2[player.position] || 0;
+        // If equal, prefer smaller team
+        if (team1.length < team2.length) return team1;
+        if (team2.length < team1.length) return team2;
 
-        // Prefer team with fewer players in this position
-        if (posCount1 < posCount2) return team1;
-        if (posCount2 < posCount1) return team2;
-
-        // If same position count, go by total count
-        return team1.length <= team2.length ? team1 : team2;
+        // If everything equal, alternate
+        return team1;
     }
 
-    // First, handle linked groups
+    // Step 1: Handle linked groups (must stay together)
     const groups = findLinkedGroups(players);
 
-    // Separate star groups and regular groups
+    // Separate groups with stars from regular groups
     const starGroups = groups.filter(g => g.some(p => p.isStar));
     const regularGroups = groups.filter(g => !g.some(p => p.isStar));
 
-    // Assign star groups alternately, trying to balance positions
+    // Distribute star groups between teams
     starGroups.forEach((group, idx) => {
-        // Try to put star groups in the team with fewer stars
-        const stars1 = team1.filter(p => p.isStar).length;
-        const stars2 = team2.filter(p => p.isStar).length;
-        const team = stars1 <= stars2 ? team1 : team2;
-
+        const team = idx % 2 === 0 ? team1 : team2;
         group.forEach(player => {
             if (team.length < teamSize) {
                 team.push(player);
@@ -533,7 +523,7 @@ function balanceTeams(players, teamSize) {
         });
     });
 
-    // Assign regular groups alternately, trying to balance
+    // Distribute regular linked groups
     regularGroups.forEach((group, idx) => {
         const team = team1.length <= team2.length ? team1 : team2;
         group.forEach(player => {
@@ -544,52 +534,28 @@ function balanceTeams(players, teamSize) {
         });
     });
 
-    // Assign remaining players with smart position balancing
-    let remaining = players.filter(p => !assigned.has(p.id));
+    // Step 2: Get all remaining unassigned players
+    const remaining = players.filter(p => !assigned.has(p.id));
 
-    // Group players by position
-    const positionGroups = {};
-    remaining.forEach(player => {
-        const pos = player.position;
-        if (!positionGroups[pos]) positionGroups[pos] = [];
-        positionGroups[pos].push(player);
+    // Step 3: Sort by stars first, then shuffle within each group
+    const stars = remaining.filter(p => p.isStar);
+    const nonStars = remaining.filter(p => !p.isStar);
+
+    // Shuffle each group
+    stars.sort(() => Math.random() - 0.5);
+    nonStars.sort(() => Math.random() - 0.5);
+
+    // Combine: stars first, then non-stars
+    const sortedRemaining = [...stars, ...nonStars];
+
+    // Step 4: Assign one by one using smart position balancing
+    sortedRemaining.forEach(player => {
+        const team = getBestTeamForPlayer(player);
+        if (team && team.length < teamSize) {
+            team.push(player);
+            assigned.add(player.id);
+        }
     });
-
-    // Sort each position group by star status (stars first)
-    Object.keys(positionGroups).forEach(pos => {
-        positionGroups[pos].sort((a, b) => {
-            if (a.isStar !== b.isStar) return b.isStar - a.isStar;
-            return 0;
-        });
-    });
-
-    // Interleave assignment by position to ensure balance
-    // This ensures that if we have 2 Centers, they go to different teams
-    let allAssigned = false;
-    while (!allAssigned) {
-        allAssigned = true;
-
-        // Try to assign one player from each position group
-        Object.keys(positionGroups).forEach(pos => {
-            if (positionGroups[pos].length > 0) {
-                const player = positionGroups[pos].shift();
-                const team = getBestTeam(player);
-                if (team.length < teamSize) {
-                    team.push(player);
-                    assigned.add(player.id);
-                    allAssigned = false;
-                } else {
-                    // If can't add to best team, try the other
-                    const otherTeam = team === team1 ? team2 : team1;
-                    if (otherTeam.length < teamSize) {
-                        otherTeam.push(player);
-                        assigned.add(player.id);
-                        allAssigned = false;
-                    }
-                }
-            }
-        });
-    }
 
     return [team1, team2];
 }
