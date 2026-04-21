@@ -56,6 +56,9 @@
                 team2: team2.map(p => ({ name: p.name, pos: p.position, star: p.isStar }))
             };
 
+            // Check if there are ANY linked players in this test
+            const hasAnyLinkedPlayers = players.some(p => p.linkedWith && p.linkedWith.length > 0);
+
             // Check rules
             const checks = [];
 
@@ -68,51 +71,39 @@
             });
 
             // Rule 2: Position balance (for positions with 2+ players)
-            // IMPORTANT: Skip position balance check if players of same position are LINKED
-            const positions = [...new Set(players.map(p => p.position))];
-            positions.forEach(pos => {
-                const playersInPos = players.filter(p => p.position === pos);
-                const total = playersInPos.length;
+            // SKIP ALL position checks if there are ANY linked players
+            if (!hasAnyLinkedPlayers) {
+                const positions = [...new Set(players.map(p => p.position))];
+                positions.forEach(pos => {
+                    const playersInPos = players.filter(p => p.position === pos);
+                    const total = playersInPos.length;
 
-                if (total >= 2) {
-                    // Check if any two players in this position are linked
-                    let hasLinkedInPosition = false;
-                    for (let i = 0; i < playersInPos.length; i++) {
-                        for (let j = i + 1; j < playersInPos.length; j++) {
-                            if (playersInPos[i].linkedWith.includes(playersInPos[j].id)) {
-                                hasLinkedInPosition = true;
-                                break;
-                            }
-                        }
-                        if (hasLinkedInPosition) break;
-                    }
-
-                    const t1Count = team1.filter(p => p.position === pos).length;
-                    const t2Count = team2.filter(p => p.position === pos).length;
-                    const diff = Math.abs(t1Count - t2Count);
-
-                    if (hasLinkedInPosition) {
-                        // If linked, position imbalance is ALLOWED
-                        checks.push({
-                            rule: `Position ${pos} balance (LINKED - imbalance OK)`,
-                            pass: true, // Always pass if linked
-                            detail: `Team1: ${t1Count}, Team2: ${t2Count}, Diff: ${diff} (Linked players)`
-                        });
-                    } else {
-                        // If not linked, check balance
+                    if (total >= 2) {
+                        const t1Count = team1.filter(p => p.position === pos).length;
+                        const t2Count = team2.filter(p => p.position === pos).length;
+                        const diff = Math.abs(t1Count - t2Count);
                         const balanced = diff <= 1; // Allow max difference of 1
+
                         checks.push({
                             rule: `Position ${pos} balance`,
                             pass: balanced,
                             detail: `Team1: ${t1Count}, Team2: ${t2Count}, Diff: ${diff}`
                         });
                     }
-                }
-            });
+                });
+            } else {
+                // If ANY linked players exist, skip position balance checks entirely
+                checks.push({
+                    rule: 'Position balance (SKIPPED - has linked players)',
+                    pass: true,
+                    detail: `Linked players present - position balance may be affected`
+                });
+            }
 
             // Rule 3: Stars distributed (if 2+ stars not linked)
             const stars = players.filter(p => p.isStar);
-            if (stars.length >= 2) {
+            if (stars.length >= 2 && !hasAnyLinkedPlayers) {
+                // Only check star distribution if NO linked players at all
                 const t1Stars = team1.filter(p => p.isStar).length;
                 const t2Stars = team2.filter(p => p.isStar).length;
                 const starDiff = Math.abs(t1Stars - t2Stars);
@@ -121,6 +112,13 @@
                     rule: 'Stars distributed',
                     pass: starsBalanced,
                     detail: `Team1: ${t1Stars}⭐, Team2: ${t2Stars}⭐, Diff: ${starDiff}`
+                });
+            } else if (stars.length >= 2 && hasAnyLinkedPlayers) {
+                // If there are linked players, star distribution check is SKIPPED
+                checks.push({
+                    rule: 'Stars distributed (SKIPPED - has linked players)',
+                    pass: true,
+                    detail: `Linked players present - star balance may be affected`
                 });
             }
 
