@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vercel dev",
-    "build": "echo 'No build step required'",
+    "build": "echo 'No build step required - serverless functions'",
     "deploy": "vercel --prod",
     "validate:env": "node --env-file=.env.local validate-env.js",
+    "test:unit": "node test-phone.js && node --env-file=.env.local test-jwt.js",
     "test:backend": "node --env-file=.env.local test-backend.js",
-    "test:integration": "npm run validate:env && npm run test:backend"
+    "test:integration": "npm run validate:env && npm run test:backend",
+    "test": "npm run test:unit && npm run test:integration"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
@@ -17,7 +19,6 @@
     "jsonwebtoken": "^9.0.2",
     "twilio": "^4.19.0"
   },
-  "devDependencies": {},
   "engines": {
     "node": ">=18.0.0"
   }
