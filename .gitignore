@@ -15,4 +15,18 @@ Thumbs.db
 # Temporary files
 *.tmp
 
+# Vercel
 .vercel
+
+# Environment variables (NEVER commit secrets)
+.env
+.env.local
+.env.production
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+build/
