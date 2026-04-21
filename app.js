@@ -473,6 +473,39 @@ function balanceTeams(players, teamSize) {
     const team2 = [];
     const assigned = new Set();
 
+    // Helper function to count positions in a team
+    function countPositions(team) {
+        const counts = {};
+        team.forEach(p => {
+            counts[p.position] = (counts[p.position] || 0) + 1;
+        });
+        return counts;
+    }
+
+    // Helper function to get best team for a player based on position balance
+    function getBestTeam(player) {
+        if (team1.length >= teamSize) return team2;
+        if (team2.length >= teamSize) return team1;
+
+        // If player has no position (0), just balance by count
+        if (player.position === 0) {
+            return team1.length <= team2.length ? team1 : team2;
+        }
+
+        const counts1 = countPositions(team1);
+        const counts2 = countPositions(team2);
+
+        const posCount1 = counts1[player.position] || 0;
+        const posCount2 = counts2[player.position] || 0;
+
+        // Prefer team with fewer players in this position
+        if (posCount1 < posCount2) return team1;
+        if (posCount2 < posCount1) return team2;
+
+        // If same position count, go by total count
+        return team1.length <= team2.length ? team1 : team2;
+    }
+
     // First, handle linked groups
     const groups = findLinkedGroups(players);
 
@@ -480,9 +513,13 @@ function balanceTeams(players, teamSize) {
     const starGroups = groups.filter(g => g.some(p => p.isStar));
     const regularGroups = groups.filter(g => !g.some(p => p.isStar));
 
-    // Assign star groups alternately
+    // Assign star groups alternately, trying to balance positions
     starGroups.forEach((group, idx) => {
-        const team = idx % 2 === 0 ? team1 : team2;
+        // Try to put star groups in the team with fewer stars
+        const stars1 = team1.filter(p => p.isStar).length;
+        const stars2 = team2.filter(p => p.isStar).length;
+        const team = stars1 <= stars2 ? team1 : team2;
+
         group.forEach(player => {
             if (team.length < teamSize) {
                 team.push(player);
@@ -491,9 +528,9 @@ function balanceTeams(players, teamSize) {
         });
     });
 
-    // Assign regular groups alternately
+    // Assign regular groups alternately, trying to balance
     regularGroups.forEach((group, idx) => {
-        const team = idx % 2 === 0 ? team1 : team2;
+        const team = team1.length <= team2.length ? team1 : team2;
         group.forEach(player => {
             if (team.length < teamSize && !assigned.has(player.id)) {
                 team.push(player);
@@ -502,20 +539,21 @@ function balanceTeams(players, teamSize) {
         });
     });
 
-    // Assign remaining players, trying to balance positions
+    // Assign remaining players with smart position balancing
     const remaining = players.filter(p => !assigned.has(p.id));
 
-    // Sort remaining by star status and position
+    // Sort by: stars first, then by position (to group same positions together)
     remaining.sort((a, b) => {
         if (a.isStar !== b.isStar) return b.isStar - a.isStar;
         return a.position - b.position;
     });
 
+    // Assign each remaining player to best team for position balance
     remaining.forEach(player => {
-        // Assign to team with fewer players or better position balance
-        const team = team1.length <= team2.length ? team1 : team2;
+        const team = getBestTeam(player);
         if (team.length < teamSize) {
             team.push(player);
+            assigned.add(player.id);
         }
     });
 
