@@ -4,7 +4,6 @@
   "description": "Team Selector - Basketball & Soccer team balancing app with authentication",
   "type": "module",
   "scripts": {
-    "dev": "vercel dev",
     "build": "echo 'No build step required'",
     "deploy": "vercel --prod",
     "validate:env": "node --env-file=.env.local validate-env.js",
