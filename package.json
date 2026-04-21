@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'No build step required'",
-    "deploy": "vercel --prod"
+    "deploy": "vercel --prod",
+    "validate:env": "node --env-file=.env.local validate-env.js",
+    "test:backend": "node --env-file=.env.local test-backend.js",
+    "test:integration": "npm run validate:env && npm run test:backend"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
