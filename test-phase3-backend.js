@@ -74,10 +74,30 @@ async function request(endpoint, options = {}) {
 async function cleanup() {
   log('\nCleaning up test data...', 'info');
 
-  // Delete test users (including test admin)
+  // Delete admin actions for test users FIRST (FK constraint)
   for (const user of Object.values(testUsers)) {
     const phoneNormalized = normalizePhone(user.phone);
-    await supabase.from('auth_users').delete().eq('phone_normalized', phoneNormalized);
+
+    // Get user ID
+    const { data: userData } = await supabase
+      .from('auth_users')
+      .select('id')
+      .eq('phone_normalized', phoneNormalized)
+      .single();
+
+    if (userData) {
+      // Delete admin actions by this user
+      await supabase
+        .from('admin_actions')
+        .delete()
+        .eq('admin_id', userData.id);
+
+      // Delete admin actions targeting this user
+      await supabase
+        .from('admin_actions')
+        .delete()
+        .eq('target_user_id', userData.id);
+    }
   }
 
   // Delete test player ratings
@@ -87,6 +107,15 @@ async function cleanup() {
   await supabase.from('player_ratings').delete().eq('player_name', 'Test Validation');
   await supabase.from('player_ratings').delete().eq('player_name', 'Test Min');
   await supabase.from('player_ratings').delete().eq('player_name', 'Test Max');
+
+  // Now delete test users
+  for (const user of Object.values(testUsers)) {
+    const phoneNormalized = normalizePhone(user.phone);
+    await supabase
+      .from('auth_users')
+      .delete()
+      .eq('phone_normalized', phoneNormalized);
+  }
 
   log('Cleanup complete\n', 'success');
 }
@@ -98,6 +127,10 @@ async function setupTestUsers() {
   const adminOtp = await request('/api/auth/send-otp', {
     body: { phone: testUsers.admin.phone }
   });
+
+  if (adminOtp.status !== 200) {
+    log(`Admin OTP failed: ${adminOtp.status} - ${adminOtp.data?.error || 'Unknown error'}`, 'error');
+  }
 
   if (adminOtp.status === 200 && adminOtp.data.otpCode) {
     await request('/api/auth/verify-otp', {
@@ -131,6 +164,10 @@ async function setupTestUsers() {
   const subAdminRegister = await request('/api/auth/send-otp', {
     body: { phone: testUsers.subAdmin.phone }
   });
+
+  if (subAdminRegister.status !== 200) {
+    log(`Sub-admin OTP failed: ${subAdminRegister.status} - ${subAdminRegister.data?.error || 'Unknown error'}`, 'error');
+  }
 
   if (subAdminRegister.status === 200 && subAdminRegister.data.otpCode) {
     await request('/api/auth/verify-otp', {
