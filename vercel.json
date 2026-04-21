@@ -4,6 +4,10 @@
     {
       "src": "api/**/*.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "frontend/**",
+      "use": "@vercel/static"
     }
   ],
   "rewrites": [
@@ -12,6 +16,7 @@
     { "source": "/api/auth/register", "destination": "/api/auth/register.js" },
     { "source": "/api/auth/login", "destination": "/api/auth/login.js" },
     { "source": "/api/auth/refresh", "destination": "/api/auth/refresh.js" },
-    { "source": "/api/auth/logout", "destination": "/api/auth/logout.js" }
+    { "source": "/api/auth/logout", "destination": "/api/auth/logout.js" },
+    { "source": "/(.*)", "destination": "/frontend/$1" }
   ]
 }

@@ -9,9 +9,159 @@
     <title>Team Selector - בוחר קבוצות</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="auth.css">
     <link rel="apple-touch-icon" href="icon-192.png">
 </head>
 <body>
+    <!-- Authentication Container (shown before main app) -->
+    <div id="authContainer" class="auth-container" style="display: none;">
+
+        <!-- Phone Entry Screen -->
+        <section id="phoneScreen" class="auth-screen active">
+            <div class="auth-card">
+                <div class="auth-icon">📱</div>
+                <h2 class="auth-title">Welcome</h2>
+                <p class="auth-subtitle">Enter your phone number to continue</p>
+
+                <form class="auth-form" onsubmit="event.preventDefault(); auth.sendOTP();">
+                    <div class="form-group">
+                        <label for="phoneInput">Phone Number</label>
+                        <input
+                            type="tel"
+                            id="phoneInput"
+                            placeholder="050-123-4567"
+                            autocomplete="tel"
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" class="primary-btn">Send Code</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- OTP Verification Screen -->
+        <section id="otpScreen" class="auth-screen">
+            <div class="auth-card">
+                <div class="auth-icon">🔐</div>
+                <h2 class="auth-title">Verify Code</h2>
+                <p class="auth-subtitle">
+                    Enter the code sent to <strong id="otpPhoneDisplay"></strong>
+                </p>
+
+                <form class="auth-form" onsubmit="event.preventDefault(); auth.verifyOTP();">
+                    <div class="form-group">
+                        <label for="otpInput">Verification Code</label>
+                        <input
+                            type="text"
+                            id="otpInput"
+                            placeholder="123456"
+                            maxlength="6"
+                            pattern="[0-9]{6}"
+                            autocomplete="one-time-code"
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" class="primary-btn">Verify</button>
+
+                    <button
+                        type="button"
+                        class="link-btn"
+                        onclick="window.auth && auth.showAuthScreen && auth.showAuthScreen('phone') || (document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active')), document.getElementById('phoneScreen').classList.add('active'))"
+                    >
+                        ← Change phone number
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Registration Screen (New Users) -->
+        <section id="registerScreen" class="auth-screen">
+            <div class="auth-card">
+                <div class="auth-icon">✨</div>
+                <h2 class="auth-title">Create Account</h2>
+                <p class="auth-subtitle">
+                    Set up your account for <strong id="registerPhoneDisplay"></strong>
+                </p>
+
+                <form class="auth-form" onsubmit="event.preventDefault(); auth.registerUser();">
+                    <div class="form-group">
+                        <label for="registerNameInput">Display Name</label>
+                        <input
+                            type="text"
+                            id="registerNameInput"
+                            placeholder="Your name"
+                            autocomplete="name"
+                            required
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registerPasswordInput">Password</label>
+                        <input
+                            type="password"
+                            id="registerPasswordInput"
+                            placeholder="At least 8 characters"
+                            autocomplete="new-password"
+                            minlength="8"
+                            required
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registerConfirmPasswordInput">Confirm Password</label>
+                        <input
+                            type="password"
+                            id="registerConfirmPasswordInput"
+                            placeholder="Re-enter password"
+                            autocomplete="new-password"
+                            minlength="8"
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" class="primary-btn">Create Account</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Login Screen (Existing Users) -->
+        <section id="loginScreen" class="auth-screen">
+            <div class="auth-card">
+                <div class="auth-icon">🔑</div>
+                <h2 class="auth-title">Welcome Back</h2>
+                <p class="auth-subtitle">
+                    Login as <strong id="loginPhoneDisplay"></strong>
+                </p>
+
+                <form class="auth-form" onsubmit="event.preventDefault(); auth.loginUser();">
+                    <div class="form-group">
+                        <label for="loginPasswordInput">Password</label>
+                        <input
+                            type="password"
+                            id="loginPasswordInput"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" class="primary-btn">Login</button>
+
+                    <button
+                        type="button"
+                        class="link-btn"
+                        onclick="window.auth && auth.showAuthScreen && auth.showAuthScreen('phone') || (document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active')), document.getElementById('phoneScreen').classList.add('active'))"
+                    >
+                        ← Use different phone
+                    </button>
+                </form>
+            </div>
+        </section>
+
+    </div>
+
     <!-- Header -->
     <header id="header">
         <button id="helpBtn" class="icon-btn" aria-label="Help">
@@ -22,6 +172,14 @@
             <span id="versionNumber" class="version-number">v1.2.2</span>
         </div>
         <div class="header-controls">
+            <div id="userMenu" class="user-menu" style="display: none;">
+                <button id="userMenuBtn" class="user-menu-btn">
+                    <span id="userDisplay"></span>
+                </button>
+                <div id="userDropdown" class="user-dropdown">
+                    <button onclick="auth.logout()" class="logout-btn">Logout</button>
+                </div>
+            </div>
             <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">
                 <span class="icon">🌙</span>
             </button>
@@ -183,6 +341,7 @@
         </div>
     </div>
 
+    <script src="auth.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
