@@ -1,5 +1,5 @@
 // App State
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.1';
 
 const state = {
     currentScreen: 'welcome',
@@ -478,16 +478,29 @@ function balanceTeams(players, teamSize) {
     const team2 = [];
     const assigned = new Set();
 
-    // Helper: Count how many players of each position in a team
+    // Helper: Count stars in a team
+    function getStarCount(team) {
+        return team.filter(p => p.isStar).length;
+    }
+
+    // Helper: Count position in a team
     function getPositionCount(team, position) {
         return team.filter(p => p.position === position).length;
     }
 
-    // Helper: Get which team should get this player for best balance
+    // Helper: Get best team for a player
     function getBestTeamForPlayer(player) {
-        // If one team is full, use the other
+        // Check if teams are full
         if (team1.length >= teamSize) return team2;
         if (team2.length >= teamSize) return team1;
+
+        // For star players, prefer team with fewer stars
+        if (player.isStar) {
+            const stars1 = getStarCount(team1);
+            const stars2 = getStarCount(team2);
+            if (stars1 < stars2) return team1;
+            if (stars2 < stars1) return team2;
+        }
 
         // Count this position in both teams
         const pos1 = getPositionCount(team1, player.position);
@@ -497,62 +510,81 @@ function balanceTeams(players, teamSize) {
         if (pos1 < pos2) return team1;
         if (pos2 < pos1) return team2;
 
-        // If equal, prefer smaller team
+        // If equal positions, prefer smaller team
         if (team1.length < team2.length) return team1;
         if (team2.length < team1.length) return team2;
 
-        // If everything equal, alternate
+        // Default to team1
         return team1;
     }
 
-    // Step 1: Handle linked groups (must stay together)
+    // STEP 1: Find all linked groups
     const groups = findLinkedGroups(players);
 
-    // Separate groups with stars from regular groups
+    // Separate into star groups and non-star groups
     const starGroups = groups.filter(g => g.some(p => p.isStar));
-    const regularGroups = groups.filter(g => !g.some(p => p.isStar));
+    const nonStarGroups = groups.filter(g => !g.some(p => p.isStar));
 
-    // Distribute star groups between teams
+    // STEP 2: Assign star groups alternately
     starGroups.forEach((group, idx) => {
-        const team = idx % 2 === 0 ? team1 : team2;
-        group.forEach(player => {
-            if (team.length < teamSize) {
-                team.push(player);
+        // Alternate between teams for star groups
+        const targetTeam = idx % 2 === 0 ? team1 : team2;
+
+        // Try to add to target team, but check capacity
+        let allFit = true;
+        for (const player of group) {
+            if (targetTeam.length < teamSize) {
+                targetTeam.push(player);
                 assigned.add(player.id);
+            } else {
+                allFit = false;
+                break;
             }
-        });
+        }
+
+        // If didn't fit, add remaining to other team
+        if (!allFit) {
+            const otherTeam = targetTeam === team1 ? team2 : team1;
+            for (const player of group) {
+                if (!assigned.has(player.id) && otherTeam.length < teamSize) {
+                    otherTeam.push(player);
+                    assigned.add(player.id);
+                }
+            }
+        }
     });
 
-    // Distribute regular linked groups
-    regularGroups.forEach((group, idx) => {
-        const team = team1.length <= team2.length ? team1 : team2;
-        group.forEach(player => {
-            if (team.length < teamSize && !assigned.has(player.id)) {
-                team.push(player);
+    // STEP 3: Assign non-star linked groups to smaller team
+    nonStarGroups.forEach(group => {
+        const targetTeam = team1.length <= team2.length ? team1 : team2;
+
+        for (const player of group) {
+            if (!assigned.has(player.id) && targetTeam.length < teamSize) {
+                targetTeam.push(player);
                 assigned.add(player.id);
             }
-        });
+        }
     });
 
-    // Step 2: Get all remaining unassigned players
+    // STEP 4: Get remaining unassigned players
     const remaining = players.filter(p => !assigned.has(p.id));
 
-    // Step 3: Sort by stars first, then shuffle within each group
-    const stars = remaining.filter(p => p.isStar);
-    const nonStars = remaining.filter(p => !p.isStar);
+    // STEP 5: Sort remaining players properly
+    // Sort by: stars first, then by position, then shuffle within same category
+    remaining.sort((a, b) => {
+        // Stars first
+        if (a.isStar !== b.isStar) return b.isStar - a.isStar;
+        // Then by position
+        if (a.position !== b.position) return a.position - b.position;
+        // Random within same star status and position
+        return Math.random() - 0.5;
+    });
 
-    // Shuffle each group
-    stars.sort(() => Math.random() - 0.5);
-    nonStars.sort(() => Math.random() - 0.5);
-
-    // Combine: stars first, then non-stars
-    const sortedRemaining = [...stars, ...nonStars];
-
-    // Step 4: Assign one by one using smart position balancing
-    sortedRemaining.forEach(player => {
-        const team = getBestTeamForPlayer(player);
-        if (team && team.length < teamSize) {
-            team.push(player);
+    // STEP 6: Assign remaining players one by one with smart balancing
+    remaining.forEach(player => {
+        const bestTeam = getBestTeamForPlayer(player);
+        if (bestTeam && bestTeam.length < teamSize) {
+            bestTeam.push(player);
             assigned.add(player.id);
         }
     });
