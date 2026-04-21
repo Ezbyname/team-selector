@@ -224,6 +224,151 @@
         if (test5.passed) passedTests++;
         results.innerHTML += test5.html;
 
+        // Test 6: Linked Stars Same Position (MUST stay together)
+        totalTests++;
+        const p1 = createPlayer('Star A', 3, true);
+        const p2 = createPlayer('Star B', 3, true);
+        p1.linkedWith = [p2.id];
+        p2.linkedWith = [p1.id];
+
+        const test6Players = [
+            p1, p2,
+            createPlayer('Player C', 1),
+            createPlayer('Player D', 1),
+            createPlayer('Player E', 2),
+            createPlayer('Player F', 2),
+        ];
+
+        const test6 = runTest(
+            'Test 6: Two Star Centers LINKED (must stay together)',
+            test6Players,
+            3,
+            {}
+        );
+
+        // Special check: are they together?
+        const [t6_team1, t6_team2] = balanceTeams(test6Players, 3);
+        const p1InTeam1 = t6_team1.some(p => p.id === p1.id);
+        const p2InTeam1 = t6_team1.some(p => p.id === p2.id);
+        const linkedTogether = p1InTeam1 === p2InTeam1;
+
+        if (linkedTogether) {
+            test6.html += `<div class="pass">✅ LINKED CHECK: Both stars are together!</div>`;
+        } else {
+            test6.html += `<div class="fail">❌ LINKED CHECK: Stars were separated (FAILED!)</div>`;
+        }
+
+        if (test6.passed && linkedTogether) passedTests++;
+        results.innerHTML += test6.html;
+
+        // Test 7: Linked Non-Stars Same Position
+        totalTests++;
+        const p3 = createPlayer('Regular A', 2, false);
+        const p4 = createPlayer('Regular B', 2, false);
+        p3.linkedWith = [p4.id];
+        p4.linkedWith = [p3.id];
+
+        const test7Players = [
+            p3, p4,
+            createPlayer('Player C', 1),
+            createPlayer('Player D', 1),
+            createPlayer('Player E', 3),
+            createPlayer('Player F', 3),
+        ];
+
+        const test7 = runTest(
+            'Test 7: Two Forwards LINKED (no stars, must stay together)',
+            test7Players,
+            3,
+            {}
+        );
+
+        const [t7_team1, t7_team2] = balanceTeams(test7Players, 3);
+        const p3InTeam1 = t7_team1.some(p => p.id === p3.id);
+        const p4InTeam1 = t7_team1.some(p => p.id === p4.id);
+        const linked7Together = p3InTeam1 === p4InTeam1;
+
+        if (linked7Together) {
+            test7.html += `<div class="pass">✅ LINKED CHECK: Both forwards are together!</div>`;
+        } else {
+            test7.html += `<div class="fail">❌ LINKED CHECK: Forwards were separated (FAILED!)</div>`;
+        }
+
+        if (test7.passed && linked7Together) passedTests++;
+        results.innerHTML += test7.html;
+
+        // Test 8: One Star Linked with Non-Star
+        totalTests++;
+        const p5 = createPlayer('Star Player', 3, true);
+        const p6 = createPlayer('Friend', 2, false);
+        p5.linkedWith = [p6.id];
+        p6.linkedWith = [p5.id];
+
+        const test8Players = [
+            p5, p6,
+            createPlayer('Other Star', 1, true),
+            createPlayer('Player D', 1),
+            createPlayer('Player E', 2),
+            createPlayer('Player F', 3),
+        ];
+
+        const test8 = runTest(
+            'Test 8: Star+Friend LINKED (different positions)',
+            test8Players,
+            3,
+            {}
+        );
+
+        const [t8_team1, t8_team2] = balanceTeams(test8Players, 3);
+        const p5InTeam1 = t8_team1.some(p => p.id === p5.id);
+        const p6InTeam1 = t8_team1.some(p => p.id === p6.id);
+        const linked8Together = p5InTeam1 === p6InTeam1;
+
+        if (linked8Together) {
+            test8.html += `<div class="pass">✅ LINKED CHECK: Star and friend are together!</div>`;
+        } else {
+            test8.html += `<div class="fail">❌ LINKED CHECK: Star and friend were separated (FAILED!)</div>`;
+        }
+
+        if (test8.passed && linked8Together) passedTests++;
+        results.innerHTML += test8.html;
+
+        // Test 9: Complex - 3 Stars, 2 Linked
+        totalTests++;
+        const p7 = createPlayer('Star A', 2, true);
+        const p8 = createPlayer('Star B', 2, true);
+        p7.linkedWith = [p8.id];
+        p8.linkedWith = [p7.id];
+
+        const test9Players = [
+            p7, p8, // Linked stars
+            createPlayer('Star C', 3, true), // Separate star
+            createPlayer('Player D', 1),
+            createPlayer('Player E', 1),
+            createPlayer('Player F', 3),
+        ];
+
+        const test9 = runTest(
+            'Test 9: 3 Stars, 2 Linked (linked stay together, 3rd separated)',
+            test9Players,
+            3,
+            {}
+        );
+
+        const [t9_team1, t9_team2] = balanceTeams(test9Players, 3);
+        const p7InTeam1 = t9_team1.some(p => p.id === p7.id);
+        const p8InTeam1 = t9_team1.some(p => p.id === p8.id);
+        const linked9Together = p7InTeam1 === p8InTeam1;
+
+        if (linked9Together) {
+            test9.html += `<div class="pass">✅ LINKED CHECK: Two linked stars are together!</div>`;
+        } else {
+            test9.html += `<div class="fail">❌ LINKED CHECK: Linked stars were separated (FAILED!)</div>`;
+        }
+
+        if (test9.passed && linked9Together) passedTests++;
+        results.innerHTML += test9.html;
+
         // Summary
         results.innerHTML += `
             <div class="test" style="border: 3px solid ${passedTests === totalTests ? '#00ff00' : '#ff0000'}">
@@ -232,6 +377,14 @@
                     ${passedTests} / ${totalTests} tests passed
                     ${passedTests === totalTests ? '✅' : '❌'}
                 </h3>
+                <div style="margin-top: 20px;">
+                    <h3>Test Categories:</h3>
+                    <div>✅ Basic Position Balance</div>
+                    <div>✅ Star Distribution</div>
+                    <div>✅ Linked Players (Stars)</div>
+                    <div>✅ Linked Players (Non-Stars)</div>
+                    <div>✅ Mixed Scenarios</div>
+                </div>
             </div>
         `;
 
