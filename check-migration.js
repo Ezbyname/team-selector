@@ -53,4 +53,68 @@ if (fnError) {
 
 console.log('✓ calculate_final_grade function exists');
 
-console.log('\n✓ Migration 003 is DEPLOYED and working!\n');
+console.log('\n✓ Migration 003 is DEPLOYED and working!');
+
+// Check migration 004
+console.log('\nChecking migration 004 deployment...\n');
+
+// Check 4.1: groups table
+const { data: groupsData, error: groupsError } = await supabase
+  .from('groups')
+  .select('id')
+  .limit(1);
+
+if (groupsError) {
+  console.log('✗ groups table does NOT exist');
+  console.log('  Error:', groupsError.message);
+  console.log('\nMigration 004 NOT deployed!');
+  console.log('You must run the SQL migration in Supabase dashboard first.');
+  process.exit(1);
+}
+
+console.log('✓ groups table exists');
+
+// Check 4.2: players table
+const { data: playersData, error: playersError } = await supabase
+  .from('players')
+  .select('id')
+  .limit(1);
+
+if (playersError) {
+  console.log('✗ players table does NOT exist');
+  console.log('  Error:', playersError.message);
+  console.log('\nMigration 004 NOT deployed!');
+  process.exit(1);
+}
+
+console.log('✓ players table exists');
+
+// Check 4.3: game_sessions table
+const { data: sessionsData, error: sessionsError } = await supabase
+  .from('game_sessions')
+  .select('id')
+  .limit(1);
+
+if (sessionsError) {
+  console.log('✗ game_sessions table does NOT exist');
+  console.log('  Error:', sessionsError.message);
+  console.log('\nMigration 004 NOT deployed!');
+  process.exit(1);
+}
+
+console.log('✓ game_sessions table exists');
+
+// Check 4.4: get_player_final_rating function
+const { data: fnData2, error: fnError2 } = await supabase
+  .rpc('get_player_final_rating', { p_player_id: '00000000-0000-0000-0000-000000000000' });
+
+if (fnError2 && !fnError2.message.includes('null')) {
+  console.log('✗ get_player_final_rating function does NOT exist');
+  console.log('  Error:', fnError2.message);
+  console.log('\nMigration 004 NOT deployed!');
+  process.exit(1);
+}
+
+console.log('✓ get_player_final_rating function exists');
+
+console.log('\n✓ Migration 004 is DEPLOYED and working!\n');

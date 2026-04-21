@@ -25,6 +25,14 @@
     { "source": "/api/ratings/grade-player", "destination": "/api/ratings/grade-player.js" },
     { "source": "/api/ratings/players", "destination": "/api/ratings/players.js" },
     { "source": "/api/ratings/player", "destination": "/api/ratings/player.js" },
+    { "source": "/api/groups/create", "destination": "/api/groups/create.js" },
+    { "source": "/api/groups/list", "destination": "/api/groups/list.js" },
+    { "source": "/api/players/add", "destination": "/api/players/add.js" },
+    { "source": "/api/players/list", "destination": "/api/players/list.js" },
+    { "source": "/api/players/grade", "destination": "/api/players/grade.js" },
+    { "source": "/api/sessions/create", "destination": "/api/sessions/create.js" },
+    { "source": "/api/sessions/select-players", "destination": "/api/sessions/select-players.js" },
+    { "source": "/api/sessions/roster", "destination": "/api/sessions/roster.js" },
     { "source": "/(.*)", "destination": "/frontend/$1" }
   ]
 }
