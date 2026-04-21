@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Icon Generator</title>
+</head>
+<body>
+    <h2>Icon Generator</h2>
+    <p>This will generate the app icons. Right-click each image and "Save as":</p>
+
+    <h3>192x192 Icon</h3>
+    <canvas id="icon192" width="192" height="192"></canvas>
+    <br><button onclick="download('icon192', 'icon-192.png')">Download 192x192</button>
+
+    <h3>512x512 Icon</h3>
+    <canvas id="icon512" width="512" height="512"></canvas>
+    <br><button onclick="download('icon512', 'icon-512.png')">Download 512x512</button>
+
+    <script>
+        function drawIcon(canvas) {
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            const scale = size / 512;
+
+            // Background
+            ctx.fillStyle = '#1d428a';
+            ctx.fillRect(0, 0, size, size);
+
+            // Basketball
+            ctx.beginPath();
+            ctx.arc(200 * scale, 256 * scale, 110 * scale, 0, Math.PI * 2);
+            ctx.fillStyle = '#fd6b2e';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 8 * scale;
+            ctx.stroke();
+
+            // Basketball lines
+            ctx.beginPath();
+            ctx.moveTo(200 * scale, 146 * scale);
+            ctx.lineTo(200 * scale, 366 * scale);
+            ctx.moveTo(90 * scale, 256 * scale);
+            ctx.lineTo(310 * scale, 256 * scale);
+            ctx.stroke();
+
+            // Soccer ball
+            ctx.beginPath();
+            ctx.arc(360 * scale, 256 * scale, 90 * scale, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 6 * scale;
+            ctx.stroke();
+
+            // Pentagon on soccer ball
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.moveTo(360 * scale, 220 * scale);
+            ctx.lineTo(338 * scale, 240 * scale);
+            ctx.lineTo(350 * scale, 268 * scale);
+            ctx.lineTo(370 * scale, 268 * scale);
+            ctx.lineTo(382 * scale, 240 * scale);
+            ctx.closePath();
+            ctx.fill();
+
+            // Text
+            ctx.fillStyle = '#fff';
+            ctx.font = `bold ${60 * scale}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('TEAMS', 256 * scale, 450 * scale);
+        }
+
+        function download(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const url = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = url;
+            link.click();
+        }
+
+        // Draw icons
+        drawIcon(document.getElementById('icon192'));
+        drawIcon(document.getElementById('icon512'));
+    </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="110" fill="#1d428a"/>
+
+  <!-- Basketball -->
+  <circle cx="200" cy="256" r="110" fill="#fd6b2e" stroke="#fff" stroke-width="8"/>
+  <path d="M200 146 L200 366 M90 256 L310 256" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+  <path d="M140 180 Q200 220 260 180 M140 332 Q200 292 260 332" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none"/>
+
+  <!-- Soccer Ball -->
+  <circle cx="360" cy="256" r="90" fill="#fff" stroke="#333" stroke-width="6"/>
+  <path d="M360 195 L338 230 L355 265 L385 265 L402 230 Z" fill="#333"/>
+  <path d="M338 230 L305 215 M355 265 L340 300 M385 265 L400 300 M402 230 L435 215" stroke="#333" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Text -->
+  <text x="256" y="450" font-family="Arial, sans-serif" font-size="60" font-weight="bold" fill="#fff" text-anchor="middle">TEAMS</text>
+</svg>

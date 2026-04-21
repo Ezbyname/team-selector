@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1d428a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Team Selector - בוחר קבוצות</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+    <!-- Header -->
+    <header id="header">
+        <button id="helpBtn" class="icon-btn" aria-label="Help">
+            <span class="icon">❓</span>
+        </button>
+        <h1 id="headerTitle">Team Selector</h1>
+        <div class="header-controls">
+            <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">
+                <span class="icon">🌙</span>
+            </button>
+            <button id="langToggle" class="icon-btn" aria-label="Toggle language">
+                <span class="lang-flag">🇮🇱</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main id="mainContainer">
+
+        <!-- Welcome Screen -->
+        <section id="welcomeScreen" class="screen active">
+            <div class="welcome-content">
+                <div class="welcome-icon">🏀⚽</div>
+                <h2 class="welcome-title" data-en="Welcome to Team Selector!" data-he="ברוכים הבאים לבוחר הקבוצות!">ברוכים הבאים לבוחר הקבוצות!</h2>
+
+                <div class="instructions">
+                    <div class="instruction-item">
+                        <span class="instruction-icon">1️⃣</span>
+                        <p data-en="Choose your sport: Basketball or Soccer" data-he="בחר את הספורט: כדורסל או כדורגל">בחר את הספורט: כדורסל או כדורגל</p>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-icon">2️⃣</span>
+                        <p data-en="Add players and assign positions (optional)" data-he="הוסף שחקנים ובחר תפקידים (אופציונלי)">הוסף שחקנים ובחר תפקידים (אופציונלי)</p>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-icon">⭐</span>
+                        <p data-en="Mark star players - they will be split between teams" data-he="סמן שחקני כוכב - הם יפוצלו בין הקבוצות">סמן שחקני כוכב - הם יפוצלו בין הקבוצות</p>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-icon">🔗</span>
+                        <p data-en="Link players to keep them on the same team" data-he="קשר שחקנים כדי להשאיר אותם באותה קבוצה">קשר שחקנים כדי להשאיר אותם באותה קבוצה</p>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-icon">3️⃣</span>
+                        <p data-en="Choose team size and generate balanced teams!" data-he="בחר גודל קבוצה ותיצור קבוצות מאוזנות!">בחר גודל קבוצה ותיצור קבוצות מאוזנות!</p>
+                    </div>
+                </div>
+
+                <button id="gotItBtn" class="primary-btn large" data-en="Got it!" data-he="הבנתי!">הבנתי!</button>
+            </div>
+        </section>
+
+        <!-- Sport Selection Screen -->
+        <section id="sportScreen" class="screen">
+            <div class="sport-selection">
+                <h2 data-en="Choose Your Sport" data-he="בחר את הספורט שלך">בחר את הספורט שלך</h2>
+                <div class="sport-cards">
+                    <button class="sport-card" data-sport="basketball">
+                        <div class="sport-icon">🏀</div>
+                        <h3 data-en="Basketball" data-he="כדורסל">כדורסל</h3>
+                        <p data-en="2v2 to 5v5" data-he="2 על 2 עד 5 על 5">2 על 2 עד 5 על 5</p>
+                    </button>
+                    <button class="sport-card" data-sport="soccer">
+                        <div class="sport-icon">⚽</div>
+                        <h3 data-en="Soccer" data-he="כדורגל">כדורגל</h3>
+                        <p data-en="5v5 to 11v11" data-he="5 על 5 עד 11 על 11">5 על 5 עד 11 על 11</p>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Players Management Screen -->
+        <section id="playersScreen" class="screen">
+            <div class="players-header">
+                <button id="backToSport" class="icon-btn back-btn">
+                    <span class="icon">←</span>
+                </button>
+                <h2 id="playersTitle" data-en="Manage Players" data-he="ניהול שחקנים">ניהול שחקנים</h2>
+                <div class="player-count" id="playerCount">0</div>
+            </div>
+
+            <!-- Add Player Form -->
+            <div class="add-player-section">
+                <div class="input-group">
+                    <input type="text" id="playerNameInput" placeholder="" data-placeholder-en="Player name..." data-placeholder-he="שם השחקן...">
+                    <button id="addPlayerBtn" class="primary-btn" data-en="Add" data-he="הוסף">הוסף</button>
+                </div>
+            </div>
+
+            <!-- Players List -->
+            <div class="players-list" id="playersList">
+                <div class="empty-state">
+                    <span class="empty-icon">👥</span>
+                    <p data-en="No players yet. Add your first player!" data-he="אין שחקנים עדיין. הוסף את השחקן הראשון!">אין שחקנים עדיין. הוסף את השחקן הראשון!</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button id="clearAllBtn" class="secondary-btn" data-en="Clear All" data-he="נקה הכל">נקה הכל</button>
+                <button id="continueToSettingsBtn" class="primary-btn" disabled data-en="Continue" data-he="המשך">המשך</button>
+            </div>
+        </section>
+
+        <!-- Game Settings Screen -->
+        <section id="settingsScreen" class="screen">
+            <div class="settings-header">
+                <button id="backToPlayers" class="icon-btn back-btn">
+                    <span class="icon">←</span>
+                </button>
+                <h2 data-en="Game Settings" data-he="הגדרות משחק">הגדרות משחק</h2>
+            </div>
+
+            <div class="settings-content">
+                <div class="setting-card">
+                    <label data-en="Players per team:" data-he="שחקנים בכל קבוצה:">שחקנים בכל קבוצה:</label>
+                    <div class="team-size-selector" id="teamSizeSelector">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="setting-info">
+                    <p id="teamInfo"></p>
+                </div>
+            </div>
+
+            <button id="generateTeamsBtn" class="primary-btn large" data-en="Generate Teams!" data-he="צור קבוצות!">צור קבוצות!</button>
+        </section>
+
+        <!-- Teams Result Screen -->
+        <section id="teamsScreen" class="screen">
+            <div class="teams-header">
+                <button id="backToSettings" class="icon-btn back-btn">
+                    <span class="icon">←</span>
+                </button>
+                <h2 data-en="Your Teams" data-he="הקבוצות שלך">הקבוצות שלך</h2>
+                <button id="regenerateBtn" class="icon-btn">
+                    <span class="icon">🔄</span>
+                </button>
+            </div>
+
+            <div class="teams-container" id="teamsContainer">
+                <!-- Teams will be populated here -->
+            </div>
+
+            <div id="benchContainer" class="bench-container" style="display: none;">
+                <h3 data-en="Next Game" data-he="משחק הבא">משחק הבא</h3>
+                <div class="bench-players" id="benchPlayers"></div>
+            </div>
+
+            <button id="newGameBtn" class="secondary-btn large" data-en="New Game" data-he="משחק חדש">משחק חדש</button>
+        </section>
+
+    </main>
+
+    <!-- Link Players Modal -->
+    <div id="linkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-en="Link with player" data-he="קשר עם שחקן">קשר עם שחקן</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="linkModalBody">
+                <!-- Players list will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
