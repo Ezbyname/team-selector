@@ -39,7 +39,8 @@ async function setAdminRole() {
 
   console.log('User found:');
   console.log(`  ID: ${existingUser.id}`);
-  console.log(`  Phone: ${existingUser.phone}`);
+  console.log(`  Phone (original): ${existingUser.phone}`);
+  console.log(`  Phone (normalized): ${existingUser.phone_normalized}`);
   console.log(`  Current Role: ${existingUser.role}\n`);
 
   if (existingUser.role === 'admin') {
@@ -63,7 +64,8 @@ async function setAdminRole() {
   console.log('✅ Successfully updated role to admin!\n');
   console.log('Updated user:');
   console.log(`  ID: ${updatedUser.id}`);
-  console.log(`  Phone: ${updatedUser.phone}`);
+  console.log(`  Phone (original): ${updatedUser.phone}`);
+  console.log(`  Phone (normalized): ${updatedUser.phone_normalized}`);
   console.log(`  New Role: ${updatedUser.role}\n`);
 }
 

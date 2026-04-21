@@ -164,8 +164,15 @@ async function sendOTP() {
       // Pre-fill phone display
       document.getElementById('otpPhoneDisplay').textContent = phone;
 
+      // In development mode, auto-fill OTP if provided
+      const otpInput = document.getElementById('otpInput');
+      if (data.otpCode) {
+        otpInput.value = data.otpCode;
+        console.log('🔐 Development mode: OTP auto-filled:', data.otpCode);
+      }
+
       // Focus OTP input
-      document.getElementById('otpInput').focus();
+      otpInput.focus();
 
     } else {
       showError('phoneScreen', data.error || 'Failed to send OTP');
