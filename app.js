@@ -1,5 +1,5 @@
 // App State
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.2.2';
 
 const state = {
     currentScreen: 'welcome',
@@ -558,10 +558,28 @@ function balanceTeams(players, teamSize) {
     nonStarGroups.forEach(group => {
         const targetTeam = team1.length <= team2.length ? team1 : team2;
 
+        // Try to add all to target team
+        let allFit = true;
         for (const player of group) {
-            if (!assigned.has(player.id) && targetTeam.length < teamSize) {
-                targetTeam.push(player);
-                assigned.add(player.id);
+            if (!assigned.has(player.id)) {
+                if (targetTeam.length < teamSize) {
+                    targetTeam.push(player);
+                    assigned.add(player.id);
+                } else {
+                    allFit = false;
+                    break;
+                }
+            }
+        }
+
+        // If didn't fit, add remaining to other team
+        if (!allFit) {
+            const otherTeam = targetTeam === team1 ? team2 : team1;
+            for (const player of group) {
+                if (!assigned.has(player.id) && otherTeam.length < teamSize) {
+                    otherTeam.push(player);
+                    assigned.add(player.id);
+                }
             }
         }
     });
