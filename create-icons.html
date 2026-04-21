@@ -22,53 +22,193 @@
             const size = canvas.width;
             const scale = size / 512;
 
-            // Background
-            ctx.fillStyle = '#1d428a';
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#1d428a');
+            gradient.addColorStop(1, '#c8102e');
+            ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, size, size);
 
-            // Basketball
+            // Glow effect
+            const glow = ctx.createRadialGradient(256 * scale, 200 * scale, 0, 256 * scale, 200 * scale, 200 * scale);
+            glow.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+            glow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = glow;
+            ctx.fillRect(0, 0, size, size);
+
+            // Draw Basketball Character (Left)
+            drawBasketballCharacter(ctx, 150 * scale, 180 * scale, scale);
+
+            // Draw Soccer Character (Right)
+            drawSoccerCharacter(ctx, 362 * scale, 180 * scale, scale);
+
+            // VS Badge
             ctx.beginPath();
-            ctx.arc(200 * scale, 256 * scale, 110 * scale, 0, Math.PI * 2);
+            ctx.arc(256 * scale, 340 * scale, 45 * scale, 0, Math.PI * 2);
+            ctx.fillStyle = '#fdb927';
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 4 * scale;
+            ctx.stroke();
+
+            ctx.fillStyle = '#333';
+            ctx.font = `bold ${36 * scale}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('VS', 256 * scale, 340 * scale);
+
+            // Title with outline
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2 * scale;
+            ctx.font = `bold ${48 * scale}px Arial`;
+            ctx.strokeText('TEAMS', 256 * scale, 460 * scale);
+            ctx.fillStyle = '#fff';
+            ctx.fillText('TEAMS', 256 * scale, 460 * scale);
+        }
+
+        function drawBasketballCharacter(ctx, x, y, scale) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Body
+            ctx.fillStyle = '#fd6b2e';
+            ctx.beginPath();
+            ctx.ellipse(0, 60 * scale, 45 * scale, 50 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Head (Basketball)
+            ctx.beginPath();
+            ctx.arc(0, 0, 50 * scale, 0, Math.PI * 2);
             ctx.fillStyle = '#fd6b2e';
             ctx.fill();
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 8 * scale;
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3 * scale;
             ctx.stroke();
 
             // Basketball lines
             ctx.beginPath();
-            ctx.moveTo(200 * scale, 146 * scale);
-            ctx.lineTo(200 * scale, 366 * scale);
-            ctx.moveTo(90 * scale, 256 * scale);
-            ctx.lineTo(310 * scale, 256 * scale);
+            ctx.moveTo(0, -50 * scale);
+            ctx.lineTo(0, 50 * scale);
+            ctx.moveTo(-50 * scale, 0);
+            ctx.lineTo(50 * scale, 0);
             ctx.stroke();
 
-            // Soccer ball
+            // Eyes
+            ctx.fillStyle = '#fff';
             ctx.beginPath();
-            ctx.arc(360 * scale, 256 * scale, 90 * scale, 0, Math.PI * 2);
+            ctx.arc(-15 * scale, -5 * scale, 6 * scale, 0, Math.PI * 2);
+            ctx.arc(15 * scale, -5 * scale, 6 * scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(-15 * scale, -5 * scale, 3 * scale, 0, Math.PI * 2);
+            ctx.arc(15 * scale, -5 * scale, 3 * scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Smile
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3 * scale;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(0, 5 * scale, 15 * scale, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+
+            // Arms
+            ctx.fillStyle = '#fd6b2e';
+            ctx.beginPath();
+            ctx.ellipse(-50 * scale, 40 * scale, 12 * scale, 35 * scale, -0.3, 0, Math.PI * 2);
+            ctx.ellipse(50 * scale, 40 * scale, 12 * scale, 35 * scale, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Legs
+            ctx.beginPath();
+            ctx.ellipse(-20 * scale, 105 * scale, 12 * scale, 30 * scale, 0, 0, Math.PI * 2);
+            ctx.ellipse(20 * scale, 105 * scale, 12 * scale, 30 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Shoes
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.ellipse(-20 * scale, 130 * scale, 18 * scale, 12 * scale, 0, 0, Math.PI * 2);
+            ctx.ellipse(20 * scale, 130 * scale, 18 * scale, 12 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawSoccerCharacter(ctx, x, y, scale) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Body
+            ctx.fillStyle = '#00a651';
+            ctx.beginPath();
+            ctx.ellipse(0, 60 * scale, 45 * scale, 50 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Head (Soccer ball)
+            ctx.beginPath();
+            ctx.arc(0, 0, 50 * scale, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
             ctx.strokeStyle = '#333';
-            ctx.lineWidth = 6 * scale;
+            ctx.lineWidth = 3 * scale;
             ctx.stroke();
 
-            // Pentagon on soccer ball
+            // Pentagon
             ctx.fillStyle = '#333';
             ctx.beginPath();
-            ctx.moveTo(360 * scale, 220 * scale);
-            ctx.lineTo(338 * scale, 240 * scale);
-            ctx.lineTo(350 * scale, 268 * scale);
-            ctx.lineTo(370 * scale, 268 * scale);
-            ctx.lineTo(382 * scale, 240 * scale);
+            ctx.moveTo(0, -20 * scale);
+            ctx.lineTo(-15 * scale, -5 * scale);
+            ctx.lineTo(-10 * scale, 15 * scale);
+            ctx.lineTo(10 * scale, 15 * scale);
+            ctx.lineTo(15 * scale, -5 * scale);
             ctx.closePath();
             ctx.fill();
 
-            // Text
+            // Eyes
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(-15 * scale, 5 * scale, 6 * scale, 0, Math.PI * 2);
+            ctx.arc(15 * scale, 5 * scale, 6 * scale, 0, Math.PI * 2);
+            ctx.fill();
+
             ctx.fillStyle = '#fff';
-            ctx.font = `bold ${60 * scale}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('TEAMS', 256 * scale, 450 * scale);
+            ctx.beginPath();
+            ctx.arc(-15 * scale, 5 * scale, 3 * scale, 0, Math.PI * 2);
+            ctx.arc(15 * scale, 5 * scale, 3 * scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Smile
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3 * scale;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(0, 15 * scale, 15 * scale, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+
+            // Arms
+            ctx.fillStyle = '#00a651';
+            ctx.beginPath();
+            ctx.ellipse(-50 * scale, 40 * scale, 12 * scale, 35 * scale, -0.3, 0, Math.PI * 2);
+            ctx.ellipse(50 * scale, 40 * scale, 12 * scale, 35 * scale, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Legs
+            ctx.beginPath();
+            ctx.ellipse(-20 * scale, 105 * scale, 12 * scale, 30 * scale, 0, 0, Math.PI * 2);
+            ctx.ellipse(20 * scale, 105 * scale, 12 * scale, 30 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Shoes
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.ellipse(-20 * scale, 130 * scale, 18 * scale, 12 * scale, 0, 0, Math.PI * 2);
+            ctx.ellipse(20 * scale, 130 * scale, 18 * scale, 12 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
         }
 
         function download(canvasId, filename) {
