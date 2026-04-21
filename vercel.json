@@ -1,20 +1,17 @@
 {
   "version": 2,
-  "name": "team-selector-api",
   "builds": [
     {
       "src": "api/**/*.js",
       "use": "@vercel/node"
     }
   ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "regions": ["fra1"]
+  "rewrites": [
+    { "source": "/api/auth/send-otp", "destination": "/api/auth/send-otp.js" },
+    { "source": "/api/auth/verify-otp", "destination": "/api/auth/verify-otp.js" },
+    { "source": "/api/auth/register", "destination": "/api/auth/register.js" },
+    { "source": "/api/auth/login", "destination": "/api/auth/login.js" },
+    { "source": "/api/auth/refresh", "destination": "/api/auth/refresh.js" },
+    { "source": "/api/auth/logout", "destination": "/api/auth/logout.js" }
+  ]
 }
