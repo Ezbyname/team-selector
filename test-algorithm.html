@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithm Tester</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .test {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            background: #0a0a0a;
+        }
+        .pass { color: #00ff00; }
+        .fail { color: #ff0000; }
+        .team {
+            margin: 10px 0;
+            padding: 10px;
+            background: #222;
+        }
+        h2 { color: #00aaff; }
+        h3 { color: #ffaa00; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Team Selector Algorithm Tester</h1>
+    <div id="results"></div>
+
+    <script src="app.js"></script>
+    <script>
+        const results = document.getElementById('results');
+
+        function createPlayer(name, position, isStar = false, linkedWith = []) {
+            return {
+                id: Date.now() + Math.random(),
+                name,
+                position,
+                isStar,
+                linkedWith
+            };
+        }
+
+        function runTest(testName, players, teamSize, expectedRules) {
+            console.log(`\n🧪 Running: ${testName}`);
+
+            const [team1, team2] = balanceTeams(players, teamSize);
+
+            const results = {
+                team1: team1.map(p => ({ name: p.name, pos: p.position, star: p.isStar })),
+                team2: team2.map(p => ({ name: p.name, pos: p.position, star: p.isStar }))
+            };
+
+            // Check rules
+            const checks = [];
+
+            // Rule 1: Equal team sizes
+            const sizeCheck = team1.length === team2.length && team1.length === teamSize;
+            checks.push({
+                rule: 'Equal team sizes',
+                pass: sizeCheck,
+                detail: `Team1: ${team1.length}, Team2: ${team2.length}, Expected: ${teamSize}`
+            });
+
+            // Rule 2: Position balance (for positions with 2+ players)
+            const positions = [...new Set(players.map(p => p.position))];
+            positions.forEach(pos => {
+                const total = players.filter(p => p.position === pos).length;
+                if (total >= 2) {
+                    const t1Count = team1.filter(p => p.position === pos).length;
+                    const t2Count = team2.filter(p => p.position === pos).length;
+                    const diff = Math.abs(t1Count - t2Count);
+                    const balanced = diff <= 1; // Allow max difference of 1
+                    checks.push({
+                        rule: `Position ${pos} balance`,
+                        pass: balanced,
+                        detail: `Team1: ${t1Count}, Team2: ${t2Count}, Diff: ${diff}`
+                    });
+                }
+            });
+
+            // Rule 3: Stars distributed (if 2+ stars not linked)
+            const stars = players.filter(p => p.isStar);
+            if (stars.length >= 2) {
+                const t1Stars = team1.filter(p => p.isStar).length;
+                const t2Stars = team2.filter(p => p.isStar).length;
+                const starDiff = Math.abs(t1Stars - t2Stars);
+                const starsBalanced = starDiff <= 1;
+                checks.push({
+                    rule: 'Stars distributed',
+                    pass: starsBalanced,
+                    detail: `Team1: ${t1Stars}⭐, Team2: ${t2Stars}⭐, Diff: ${starDiff}`
+                });
+            }
+
+            // Display results
+            const allPassed = checks.every(c => c.pass);
+            const statusClass = allPassed ? 'pass' : 'fail';
+            const statusIcon = allPassed ? '✅' : '❌';
+
+            let html = `
+                <div class="test">
+                    <h2>${statusIcon} ${testName}</h2>
+                    <div class="team">
+                        <h3>Team 1:</h3>
+                        ${team1.map(p => `<div>${p.name} (pos: ${p.position}) ${p.isStar ? '⭐' : ''}</div>`).join('')}
+                    </div>
+                    <div class="team">
+                        <h3>Team 2:</h3>
+                        ${team2.map(p => `<div>${p.name} (pos: ${p.position}) ${p.isStar ? '⭐' : ''}</div>`).join('')}
+                    </div>
+                    <h3>Checks:</h3>
+                    ${checks.map(c => `
+                        <div class="${c.pass ? 'pass' : 'fail'}">
+                            ${c.pass ? '✅' : '❌'} ${c.rule}: ${c.detail}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            return { html, passed: allPassed, checks };
+        }
+
+        // ======== TESTS ========
+
+        let totalTests = 0;
+        let passedTests = 0;
+
+        // Test 1: Two Centers
+        totalTests++;
+        const test1 = runTest(
+            'Test 1: Two Centers (should split)',
+            [
+                createPlayer('Player A', 3), // Center = 3
+                createPlayer('Player B', 3),
+                createPlayer('Player C', 1),
+                createPlayer('Player D', 1),
+                createPlayer('Player E', 2),
+                createPlayer('Player F', 2),
+            ],
+            3,
+            {}
+        );
+        if (test1.passed) passedTests++;
+        results.innerHTML += test1.html;
+
+        // Test 2: Two Star Centers
+        totalTests++;
+        const test2 = runTest(
+            'Test 2: Two Star Centers (should split)',
+            [
+                createPlayer('Star A', 3, true),
+                createPlayer('Star B', 3, true),
+                createPlayer('Player C', 1),
+                createPlayer('Player D', 1),
+                createPlayer('Player E', 2),
+                createPlayer('Player F', 2),
+            ],
+            3,
+            {}
+        );
+        if (test2.passed) passedTests++;
+        results.innerHTML += test2.html;
+
+        // Test 3: Perfect Balance (2+2+2)
+        totalTests++;
+        const test3 = runTest(
+            'Test 3: Perfect Balance (2 of each position)',
+            [
+                createPlayer('Center A', 3),
+                createPlayer('Center B', 3),
+                createPlayer('Forward A', 2),
+                createPlayer('Forward B', 2),
+                createPlayer('Guard A', 1),
+                createPlayer('Guard B', 1),
+            ],
+            3,
+            {}
+        );
+        if (test3.passed) passedTests++;
+        results.innerHTML += test3.html;
+
+        // Test 4: Uneven (3 Centers, 2 Forwards)
+        totalTests++;
+        const test4 = runTest(
+            'Test 4: Uneven positions (3 Centers, 2 Forwards)',
+            [
+                createPlayer('Center A', 3),
+                createPlayer('Center B', 3),
+                createPlayer('Center C', 3),
+                createPlayer('Forward A', 2),
+                createPlayer('Forward B', 2),
+            ],
+            2, // 2v2 with 1 bench
+            {}
+        );
+        if (test4.passed) passedTests++;
+        results.innerHTML += test4.html;
+
+        // Test 5: Real scenario (Hebrew names)
+        totalTests++;
+        const test5 = runTest(
+            'Test 5: Real Scenario (User Example)',
+            [
+                createPlayer('מיקי', 2, true), // Forward, Star
+                createPlayer('יהגימצח', 2),    // Forward
+                createPlayer('חתיב', 3),        // Center
+                createPlayer('ונכלכר', 3),      // Center
+                createPlayer('לחובבכ', 2),     // Forward
+                createPlayer('פבהנטוט', 2),    // Forward
+                createPlayer('Player G', 1),
+                createPlayer('Player H', 1),
+                createPlayer('Player I', 3),
+                createPlayer('Player J', 1),
+            ],
+            5,
+            {}
+        );
+        if (test5.passed) passedTests++;
+        results.innerHTML += test5.html;
+
+        // Summary
+        results.innerHTML += `
+            <div class="test" style="border: 3px solid ${passedTests === totalTests ? '#00ff00' : '#ff0000'}">
+                <h2>📊 Summary</h2>
+                <h3 class="${passedTests === totalTests ? 'pass' : 'fail'}">
+                    ${passedTests} / ${totalTests} tests passed
+                    ${passedTests === totalTests ? '✅' : '❌'}
+                </h3>
+            </div>
+        `;
+
+        console.log(`\n📊 Final: ${passedTests}/${totalTests} passed`);
+    </script>
+</body>
+</html>
