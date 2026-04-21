@@ -17,6 +17,14 @@
     { "source": "/api/auth/login", "destination": "/api/auth/login.js" },
     { "source": "/api/auth/refresh", "destination": "/api/auth/refresh.js" },
     { "source": "/api/auth/logout", "destination": "/api/auth/logout.js" },
+    { "source": "/api/admin/create-sub-admin", "destination": "/api/admin/create-sub-admin.js" },
+    { "source": "/api/admin/revoke-sub-admin", "destination": "/api/admin/revoke-sub-admin.js" },
+    { "source": "/api/admin/grant-grading-permission", "destination": "/api/admin/grant-grading-permission.js" },
+    { "source": "/api/admin/revoke-grading-permission", "destination": "/api/admin/revoke-grading-permission.js" },
+    { "source": "/api/admin/users", "destination": "/api/admin/users.js" },
+    { "source": "/api/ratings/grade-player", "destination": "/api/ratings/grade-player.js" },
+    { "source": "/api/ratings/players", "destination": "/api/ratings/players.js" },
+    { "source": "/api/ratings/player", "destination": "/api/ratings/player.js" },
     { "source": "/(.*)", "destination": "/frontend/$1" }
   ]
 }
