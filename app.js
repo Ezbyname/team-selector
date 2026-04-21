@@ -118,9 +118,11 @@ function showScreen(screenName) {
     };
 
     if (titles[screenName]) {
-        const titleText = titles[screenName][state.language];
-        document.getElementById('headerTitle').innerHTML = `${titleText} <span style="font-size: 0.5em; opacity: 0.7;">v${APP_VERSION}</span>`;
+        document.getElementById('headerTitle').textContent = titles[screenName][state.language];
     }
+
+    // Update version number
+    document.getElementById('versionNumber').textContent = `v${APP_VERSION}`;
 
     // Refresh UI if needed
     if (screenName === 'players') {
