@@ -40,7 +40,8 @@ async function handler(req, res) {
         group_id: groupId,
         name: name.trim(),
         player_position: position?.trim() || null,
-        default_rating: rating
+        default_rating: rating,
+        created_by: req.user.id  // Add created_by from authenticated user
       })
       .select()
       .single();
