@@ -184,6 +184,11 @@
       e.preventDefault();
       currentPhone = phoneInput.value.trim();
 
+      const submitBtn = phoneForm.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+
       try {
         const response = await fetch(`${API_BASE}/api/auth/send-otp`, {
           method: 'POST',
@@ -195,14 +200,30 @@
 
         if (!response.ok) {
           showError(data.error || 'Failed to send code');
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
           return;
         }
 
-        document.getElementById('otpPhoneDisplay').textContent = currentPhone;
-        showScreen('otpScreen');
-        otpInput.focus();
+        // Check if user already exists
+        if (data.userExists) {
+          // Existing user - go directly to login
+          document.getElementById('loginPhoneDisplay').textContent = currentPhone;
+          showScreen('loginScreen');
+          document.getElementById('loginPasswordInput').focus();
+        } else {
+          // New user - go to OTP verification
+          document.getElementById('otpPhoneDisplay').textContent = currentPhone;
+          showScreen('otpScreen');
+          otpInput.focus();
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
       } catch (error) {
         showError('Network error. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
       }
     });
 
@@ -210,6 +231,11 @@
     otpForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const code = otpInput.value.trim();
+
+      const submitBtn = otpForm.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Verifying...';
 
       try {
         const response = await fetch(`${API_BASE}/api/auth/verify-otp`, {
@@ -222,6 +248,8 @@
 
         if (!response.ok) {
           showError(data.error || 'Invalid code');
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
           return;
         }
 
@@ -229,12 +257,19 @@
         if (data.userExists) {
           document.getElementById('loginPhoneDisplay').textContent = currentPhone;
           showScreen('loginScreen');
+          document.getElementById('loginPasswordInput').focus();
         } else {
           document.getElementById('registerPhoneDisplay').textContent = currentPhone;
           showScreen('registerScreen');
+          document.getElementById('registerNameInput').focus();
         }
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
       } catch (error) {
         showError('Network error. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
       }
     });
 
@@ -250,6 +285,11 @@
         return;
       }
 
+      const submitBtn = registerForm.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating Account...';
+
       try {
         const response = await fetch(`${API_BASE}/api/auth/register`, {
           method: 'POST',
@@ -261,6 +301,8 @@
 
         if (!response.ok) {
           showError(data.error || 'Registration failed');
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
           return;
         }
 
@@ -268,6 +310,8 @@
         window.location.href = '/session-setup.html';
       } catch (error) {
         showError('Network error. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
       }
     });
 
@@ -275,6 +319,11 @@
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const password = document.getElementById('loginPasswordInput').value;
+
+      const submitBtn = loginForm.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Logging in...';
 
       try {
         const response = await fetch(`${API_BASE}/api/auth/login`, {
@@ -287,6 +336,8 @@
 
         if (!response.ok) {
           showError(data.error || 'Login failed');
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
           return;
         }
 
@@ -294,6 +345,8 @@
         window.location.href = '/session-setup.html';
       } catch (error) {
         showError('Network error. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
       }
     });
 

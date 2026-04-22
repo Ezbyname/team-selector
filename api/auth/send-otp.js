@@ -39,7 +39,12 @@ export default async function handler(req, res) {
       .single();
 
     if (existingUser) {
-      return res.status(409).json({ error: 'Phone number already registered' });
+      // User exists - return success and indicate they should login
+      return res.status(200).json({
+        success: true,
+        userExists: true,
+        message: 'Welcome back! Please login with your password.',
+      });
     }
 
     // Generate 6-digit OTP
@@ -83,6 +88,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
+      userExists: false,
       message: 'OTP sent successfully',
       expiresAt: expiresAt.toISOString(),
       // Only include OTP in development
