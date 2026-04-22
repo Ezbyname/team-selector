@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login DEBUG - Team Selector</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="auth.css">
+  <style>
+    #debug-log {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: black;
+      color: lime;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div id="debug-log">DEBUG LOG:</div>
+
+  <div class="auth-container">
+    <!-- Phone Entry Screen -->
+    <section id="phoneScreen" class="auth-screen active">
+      <div class="auth-card">
+        <div class="auth-icon">📱</div>
+        <h2 class="auth-title">Welcome (DEBUG MODE)</h2>
+        <p class="auth-subtitle">Enter your phone number to continue</p>
+
+        <form class="auth-form" id="phoneForm">
+          <div class="form-group">
+            <label for="phoneInput">Phone Number</label>
+            <input
+              type="tel"
+              id="phoneInput"
+              placeholder="050-123-4567"
+              value="0525502281"
+              autocomplete="tel"
+              required
+            />
+          </div>
+
+          <button type="submit" class="primary-btn">Send Code</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Login Screen -->
+    <section id="loginScreen" class="auth-screen">
+      <div class="auth-card">
+        <div class="auth-icon">🔑</div>
+        <h2 class="auth-title">Welcome Back</h2>
+        <p class="auth-subtitle">
+          Login as <strong id="loginPhoneDisplay"></strong>
+        </p>
+
+        <form class="auth-form" id="loginForm">
+          <div class="form-group">
+            <label for="loginPasswordInput">Password</label>
+            <input
+              type="password"
+              id="loginPasswordInput"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+
+          <button type="submit" class="primary-btn">Login</button>
+        </form>
+      </div>
+    </section>
+
+    <div id="errorMessage" class="error-message hidden"></div>
+  </div>
+
+  <script type="module">
+    import { getToken, saveToken } from './lib/auth.js';
+
+    const API_BASE = window.location.origin;
+    let currentPhone = '';
+    const debugLog = document.getElementById('debug-log');
+
+    function log(message) {
+      console.log(message);
+      debugLog.innerHTML += '<br>' + message;
+      debugLog.scrollTop = debugLog.scrollHeight;
+    }
+
+    log('🚀 DEBUG MODE STARTED');
+    log('API_BASE: ' + API_BASE);
+
+    // Elements
+    const phoneForm = document.getElementById('phoneForm');
+    const loginForm = document.getElementById('loginForm');
+    const phoneInput = document.getElementById('phoneInput');
+    const errorMessage = document.getElementById('errorMessage');
+
+    function showError(message) {
+      log('❌ ERROR: ' + message);
+      errorMessage.textContent = message;
+      errorMessage.classList.remove('hidden');
+      setTimeout(() => {
+        errorMessage.classList.add('hidden');
+      }, 5000);
+    }
+
+    function showScreen(screenId) {
+      log('📺 Switching to screen: ' + screenId);
+      document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    // Phone form
+    phoneForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      currentPhone = phoneInput.value.trim();
+      log('📞 Form submitted with phone: ' + currentPhone);
+
+      const submitBtn = phoneForm.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+      log('🔄 Button disabled, text changed to: Sending...');
+
+      try {
+        const url = `${API_BASE}/api/auth/send-otp`;
+        log('🌐 Calling API: ' + url);
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: currentPhone })
+        });
+
+        log('📡 Response status: ' + response.status);
+
+        const data = await response.json();
+        log('📦 Response data: ' + JSON.stringify(data));
+
+        if (!response.ok) {
+          log('⚠️ Response not OK');
+          showError(data.error || 'Failed to send code');
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+          return;
+        }
+
+        log('✅ Response OK');
+        log('🔍 Checking data.userExists: ' + data.userExists);
+
+        // Check if user already exists
+        if (data.userExists) {
+          log('✅ USER EXISTS! Going to login screen...');
+          document.getElementById('loginPhoneDisplay').textContent = currentPhone;
+          showScreen('loginScreen');
+          document.getElementById('loginPasswordInput').focus();
+          log('✅ Switched to login screen and focused password input');
+        } else {
+          log('❌ User does NOT exist (this should not happen for 0525502281)');
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        log('✅ Button re-enabled');
+      } catch (error) {
+        log('💥 EXCEPTION: ' + error.message);
+        showError('Network error. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+
+    // Login form
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('loginPasswordInput').value;
+      log('🔑 Login form submitted');
+
+      const submitBtn = loginForm.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Logging in...';
+
+      try {
+        const url = `${API_BASE}/api/auth/login`;
+        log('🌐 Calling login API: ' + url);
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: currentPhone, password })
+        });
+
+        log('📡 Login response status: ' + response.status);
+
+        const data = await response.json();
+        log('📦 Login response: ' + JSON.stringify(data));
+
+        if (!response.ok) {
+          showError(data.error || 'Login failed');
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+          return;
+        }
+
+        log('✅ Login successful! Saving token...');
+        saveToken(data.accessToken);
+        log('✅ Token saved. Redirecting...');
+        window.location.href = '/session-setup.html';
+      } catch (error) {
+        log('💥 Login exception: ' + error.message);
+        showError('Network error. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+
+    log('✅ Event listeners attached');
+    log('👉 Ready! Click "Send Code" to test');
+  </script>
+</body>
+</html>
