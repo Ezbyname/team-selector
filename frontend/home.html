@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Selector - Home</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header style="border-bottom: none; justify-content: center;">
+      <h1>Team Selector</h1>
+    </header>
+
+    <main style="padding-top: 40px;">
+      <div class="card" style="max-width: 500px; margin: 0 auto; text-align: center;">
+        <div style="font-size: 4em; margin-bottom: 20px;">🏀⚽</div>
+        <h2 style="margin-bottom: 30px;">Create Balanced Teams</h2>
+
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+          <a href="/session-setup.html" style="text-decoration: none;">
+            <button class="btn btn-primary btn-large">
+              Start New Session
+            </button>
+          </a>
+
+          <a href="/index.html" style="text-decoration: none;">
+            <button class="btn btn-secondary btn-large">
+              Quick Game (Local)
+            </button>
+          </a>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--border-color);">
+          <p style="color: var(--text-secondary); font-size: 0.95em; line-height: 1.6;">
+            <strong>New Session:</strong> Create groups, track player ratings, and generate balanced teams with full history.<br><br>
+            <strong>Quick Game:</strong> Simple team generation without login or saving.
+          </p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { getToken } from './lib/auth.js';
+
+    // If already logged in, go directly to session setup
+    const token = getToken();
+    if (token && window.location.pathname === '/home.html') {
+      window.location.href = '/session-setup.html';
+    }
+  </script>
+</body>
+</html>

@@ -24,29 +24,49 @@ async function handler(req, res) {
   }
 
   try {
-    const { data: group, error } = await supabase
-      .from('groups')
+    // Create in permanent_groups (for game_sessions FK)
+    const { data: permGroup, error: permError } = await supabase
+      .from('permanent_groups')
       .insert({
         name: name.trim(),
-        location: location?.trim() || null,
-        sport,
+        sport_type: sport, // Column name in permanent_groups is sport_type
         created_by: req.user.id
       })
       .select()
       .single();
 
-    if (error) {
-      console.error('Failed to create group:', error);
+    if (permError) {
+      console.error('Failed to create permanent group:', permError);
       return res.status(500).json({ error: 'Failed to create group' });
     }
+
+    // Also create in groups table with same ID (for players FK)
+    const { error: groupError } = await supabase
+      .from('groups')
+      .insert({
+        id: permGroup.id, // Use same ID
+        name: name.trim(),
+        location: location?.trim() || null,
+        sport: sport,
+        created_by: req.user.id
+      });
+
+    if (groupError) {
+      // Rollback permanent_groups insert
+      await supabase.from('permanent_groups').delete().eq('id', permGroup.id);
+      console.error('Failed to create group:', groupError);
+      return res.status(500).json({ error: 'Failed to create group' });
+    }
+
+    const group = permGroup;
 
     return res.status(201).json({
       success: true,
       group: {
         id: group.id,
         name: group.name,
-        location: group.location,
-        sport: group.sport,
+        location: location?.trim() || null, // Return location from request since DB doesn't store it
+        sport: group.sport_type,
         createdAt: group.created_at
       }
     });

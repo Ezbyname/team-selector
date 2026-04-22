@@ -1,38 +1,13 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "frontend/**",
-      "use": "@vercel/static"
-    }
-  ],
+  "buildCommand": "echo 'No build needed'",
+  "outputDirectory": "frontend",
   "rewrites": [
-    { "source": "/api/auth/send-otp", "destination": "/api/auth/send-otp.js" },
-    { "source": "/api/auth/verify-otp", "destination": "/api/auth/verify-otp.js" },
-    { "source": "/api/auth/register", "destination": "/api/auth/register.js" },
-    { "source": "/api/auth/login", "destination": "/api/auth/login.js" },
-    { "source": "/api/auth/refresh", "destination": "/api/auth/refresh.js" },
-    { "source": "/api/auth/logout", "destination": "/api/auth/logout.js" },
-    { "source": "/api/admin/create-sub-admin", "destination": "/api/admin/create-sub-admin.js" },
-    { "source": "/api/admin/revoke-sub-admin", "destination": "/api/admin/revoke-sub-admin.js" },
-    { "source": "/api/admin/grant-grading-permission", "destination": "/api/admin/grant-grading-permission.js" },
-    { "source": "/api/admin/revoke-grading-permission", "destination": "/api/admin/revoke-grading-permission.js" },
-    { "source": "/api/admin/users", "destination": "/api/admin/users.js" },
-    { "source": "/api/ratings/grade-player", "destination": "/api/ratings/grade-player.js" },
-    { "source": "/api/ratings/players", "destination": "/api/ratings/players.js" },
-    { "source": "/api/ratings/player", "destination": "/api/ratings/player.js" },
-    { "source": "/api/groups/create", "destination": "/api/groups/create.js" },
-    { "source": "/api/groups/list", "destination": "/api/groups/list.js" },
-    { "source": "/api/players/add", "destination": "/api/players/add.js" },
-    { "source": "/api/players/list", "destination": "/api/players/list.js" },
-    { "source": "/api/players/grade", "destination": "/api/players/grade.js" },
-    { "source": "/api/sessions/create", "destination": "/api/sessions/create.js" },
-    { "source": "/api/sessions/select-players", "destination": "/api/sessions/select-players.js" },
-    { "source": "/api/sessions/roster", "destination": "/api/sessions/roster.js" },
-    { "source": "/(.*)", "destination": "/frontend/$1" }
+    { "source": "/api/auth/(.*)", "destination": "/api/auth/index.js" },
+    { "source": "/api/admin/(.*)", "destination": "/api/admin/index.js" },
+    { "source": "/api/ratings/(.*)", "destination": "/api/ratings/index.js" },
+    { "source": "/api/groups/(.*)", "destination": "/api/groups/index.js" },
+    { "source": "/api/players/(.*)", "destination": "/api/players/index.js" },
+    { "source": "/api/sessions/(.*)", "destination": "/api/sessions/index.js" },
+    { "source": "/", "destination": "/home.html" }
   ]
 }

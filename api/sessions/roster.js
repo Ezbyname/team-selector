@@ -23,7 +23,7 @@ async function handler(req, res) {
     // Get session info
     const { data: session, error: sessionError } = await supabase
       .from('game_sessions')
-      .select('*, groups(name, sport)')
+      .select('*, permanent_groups(name, sport_type)')
       .eq('id', sessionId)
       .single();
 
@@ -45,9 +45,9 @@ async function handler(req, res) {
       success: true,
       session: {
         id: session.id,
-        groupName: session.groups.name,
-        sport: session.groups.sport,
-        sessionDate: session.session_date,
+        groupName: session.permanent_groups.name,
+        sport: session.permanent_groups.sport_type,
+        sessionDate: null, // session_date not in PostgREST cache
         status: session.status
       },
       roster: roster.map(r => ({

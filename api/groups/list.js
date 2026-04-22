@@ -15,14 +15,14 @@ async function handler(req, res) {
   const { sport } = req.query;
 
   try {
-    // Query groups table directly instead of view
+    // Query permanent_groups table
     let query = supabase
-      .from('groups')
-      .select('id, name, location, sport, created_by, created_at, updated_at')
+      .from('permanent_groups')
+      .select('id, name, sport_type, created_by, created_at, updated_at')
       .order('updated_at', { ascending: false });
 
     if (sport && ['basketball', 'soccer'].includes(sport)) {
-      query = query.eq('sport', sport);
+      query = query.eq('sport_type', sport);
     }
 
     const { data: groups, error: groupsError } = await query;
@@ -45,13 +45,13 @@ async function handler(req, res) {
         const { count: sessionCount } = await supabase
           .from('game_sessions')
           .select('id', { count: 'exact', head: true })
-          .eq('group_id', group.id);
+          .eq('permanent_group_id', group.id); // Actual column name
 
         return {
           id: group.id,
           name: group.name,
-          location: group.location,
-          sport: group.sport,
+          location: null, // permanent_groups doesn't have location
+          sport: group.sport_type, // Map sport_type to sport for API response
           createdBy: group.created_by,
           playerCount: playerCount || 0,
           sessionCount: sessionCount || 0,

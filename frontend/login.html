@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Team Selector</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+  <div class="auth-container">
+    <!-- Phone Entry Screen -->
+    <section id="phoneScreen" class="auth-screen active">
+      <div class="auth-card">
+        <div class="auth-icon">📱</div>
+        <h2 class="auth-title">Welcome</h2>
+        <p class="auth-subtitle">Enter your phone number to continue</p>
+
+        <form class="auth-form" id="phoneForm">
+          <div class="form-group">
+            <label for="phoneInput">Phone Number</label>
+            <input
+              type="tel"
+              id="phoneInput"
+              placeholder="050-123-4567"
+              autocomplete="tel"
+              required
+            />
+          </div>
+
+          <button type="submit" class="primary-btn">Send Code</button>
+          <a href="/home.html" class="link-btn" style="margin-top: 15px; display: inline-block;">← Back to Home</a>
+        </form>
+      </div>
+    </section>
+
+    <!-- OTP Verification Screen -->
+    <section id="otpScreen" class="auth-screen">
+      <div class="auth-card">
+        <div class="auth-icon">🔐</div>
+        <h2 class="auth-title">Verify Code</h2>
+        <p class="auth-subtitle">
+          Enter the code sent to <strong id="otpPhoneDisplay"></strong>
+        </p>
+
+        <form class="auth-form" id="otpForm">
+          <div class="form-group">
+            <label for="otpInput">Verification Code</label>
+            <input
+              type="text"
+              id="otpInput"
+              placeholder="123456"
+              maxlength="6"
+              pattern="[0-9]{6}"
+              autocomplete="one-time-code"
+              required
+            />
+          </div>
+
+          <button type="submit" class="primary-btn">Verify</button>
+          <button type="button" class="link-btn" id="changePhoneBtn">← Change phone number</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Registration Screen (New Users) -->
+    <section id="registerScreen" class="auth-screen">
+      <div class="auth-card">
+        <div class="auth-icon">✨</div>
+        <h2 class="auth-title">Create Account</h2>
+        <p class="auth-subtitle">
+          Set up your account for <strong id="registerPhoneDisplay"></strong>
+        </p>
+
+        <form class="auth-form" id="registerForm">
+          <div class="form-group">
+            <label for="registerNameInput">Display Name</label>
+            <input
+              type="text"
+              id="registerNameInput"
+              placeholder="Your name"
+              autocomplete="name"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="registerPasswordInput">Password</label>
+            <input
+              type="password"
+              id="registerPasswordInput"
+              placeholder="At least 8 characters"
+              autocomplete="new-password"
+              minlength="8"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="registerConfirmPasswordInput">Confirm Password</label>
+            <input
+              type="password"
+              id="registerConfirmPasswordInput"
+              placeholder="Re-enter password"
+              autocomplete="new-password"
+              minlength="8"
+              required
+            />
+          </div>
+
+          <button type="submit" class="primary-btn">Create Account</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Login Screen (Existing Users) -->
+    <section id="loginScreen" class="auth-screen">
+      <div class="auth-card">
+        <div class="auth-icon">🔑</div>
+        <h2 class="auth-title">Welcome Back</h2>
+        <p class="auth-subtitle">
+          Login as <strong id="loginPhoneDisplay"></strong>
+        </p>
+
+        <form class="auth-form" id="loginForm">
+          <div class="form-group">
+            <label for="loginPasswordInput">Password</label>
+            <input
+              type="password"
+              id="loginPasswordInput"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+
+          <button type="submit" class="primary-btn">Login</button>
+          <button type="button" class="link-btn" id="useDifferentPhoneBtn">← Use different phone</button>
+        </form>
+      </div>
+    </section>
+
+    <div id="errorMessage" class="error-message hidden"></div>
+  </div>
+
+  <script type="module">
+    import { getToken, saveToken } from './lib/auth.js';
+
+    const API_BASE = window.location.origin;
+    let currentPhone = '';
+
+    // Check if already logged in
+    const token = getToken();
+    if (token) {
+      window.location.href = '/session-setup.html';
+    }
+
+    // Elements
+    const phoneForm = document.getElementById('phoneForm');
+    const otpForm = document.getElementById('otpForm');
+    const registerForm = document.getElementById('registerForm');
+    const loginForm = document.getElementById('loginForm');
+    const phoneInput = document.getElementById('phoneInput');
+    const otpInput = document.getElementById('otpInput');
+    const errorMessage = document.getElementById('errorMessage');
+
+    // Show error
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.classList.remove('hidden');
+      setTimeout(() => {
+        errorMessage.classList.add('hidden');
+      }, 5000);
+    }
+
+    // Show screen
+    function showScreen(screenId) {
+      document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    // Phone form
+    phoneForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      currentPhone = phoneInput.value.trim();
+
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/send-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: currentPhone })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showError(data.error || 'Failed to send code');
+          return;
+        }
+
+        document.getElementById('otpPhoneDisplay').textContent = currentPhone;
+        showScreen('otpScreen');
+        otpInput.focus();
+      } catch (error) {
+        showError('Network error. Please try again.');
+      }
+    });
+
+    // OTP form
+    otpForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const code = otpInput.value.trim();
+
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/verify-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: currentPhone, code })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showError(data.error || 'Invalid code');
+          return;
+        }
+
+        // Check if user exists
+        if (data.userExists) {
+          document.getElementById('loginPhoneDisplay').textContent = currentPhone;
+          showScreen('loginScreen');
+        } else {
+          document.getElementById('registerPhoneDisplay').textContent = currentPhone;
+          showScreen('registerScreen');
+        }
+      } catch (error) {
+        showError('Network error. Please try again.');
+      }
+    });
+
+    // Register form
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('registerNameInput').value.trim();
+      const password = document.getElementById('registerPasswordInput').value;
+      const confirmPassword = document.getElementById('registerConfirmPasswordInput').value;
+
+      if (password !== confirmPassword) {
+        showError('Passwords do not match');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: currentPhone, password, displayName: name })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showError(data.error || 'Registration failed');
+          return;
+        }
+
+        saveToken(data.accessToken);
+        window.location.href = '/session-setup.html';
+      } catch (error) {
+        showError('Network error. Please try again.');
+      }
+    });
+
+    // Login form
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('loginPasswordInput').value;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: currentPhone, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showError(data.error || 'Login failed');
+          return;
+        }
+
+        saveToken(data.accessToken);
+        window.location.href = '/session-setup.html';
+      } catch (error) {
+        showError('Network error. Please try again.');
+      }
+    });
+
+    // Change phone buttons
+    document.getElementById('changePhoneBtn').addEventListener('click', () => {
+      showScreen('phoneScreen');
+      otpInput.value = '';
+    });
+
+    document.getElementById('useDifferentPhoneBtn').addEventListener('click', () => {
+      showScreen('phoneScreen');
+      document.getElementById('loginPasswordInput').value = '';
+    });
+  </script>
+</body>
+</html>

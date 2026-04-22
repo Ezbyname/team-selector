@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teams - Team Selector</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1 id="session-title">Teams</h1>
+      <div class="header-actions">
+        <button id="regenerate-btn" class="btn btn-primary">Regenerate Teams</button>
+        <button id="new-session-btn" class="btn btn-secondary">New Session</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Balance Summary -->
+      <section id="balance-summary" class="card balance-card">
+        <h2>Balance Summary</h2>
+        <div class="balance-metrics">
+          <div class="metric">
+            <span class="metric-label">Rating Difference:</span>
+            <span id="rating-diff" class="metric-value">-</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Status:</span>
+            <span id="balance-status" class="metric-value badge">-</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Teams Display -->
+      <div class="teams-container">
+        <!-- Team 1 -->
+        <section class="card team-card">
+          <div class="team-header">
+            <h2>Team 1</h2>
+            <div class="team-total" id="team1-total">Total: -</div>
+          </div>
+          <div id="team1-players" class="players-grid"></div>
+        </section>
+
+        <!-- Team 2 -->
+        <section class="card team-card">
+          <div class="team-header">
+            <h2>Team 2</h2>
+            <div class="team-total" id="team2-total">Total: -</div>
+          </div>
+          <div id="team2-players" class="players-grid"></div>
+        </section>
+      </div>
+
+      <!-- Bench (if any) -->
+      <section id="bench-section" class="card hidden">
+        <h2>Bench</h2>
+        <div id="bench-players" class="players-grid"></div>
+      </section>
+
+      <div id="error-message" class="error-message hidden"></div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { getToken } from './lib/auth.js';
+
+    const API_BASE = window.location.origin;
+    let currentSessionData = null;
+
+    // Elements
+    const sessionTitle = document.getElementById('session-title');
+    const ratingDiff = document.getElementById('rating-diff');
+    const balanceStatus = document.getElementById('balance-status');
+    const team1Total = document.getElementById('team1-total');
+    const team2Total = document.getElementById('team2-total');
+    const team1Players = document.getElementById('team1-players');
+    const team2Players = document.getElementById('team2-players');
+    const benchSection = document.getElementById('bench-section');
+    const benchPlayers = document.getElementById('bench-players');
+    const regenerateBtn = document.getElementById('regenerate-btn');
+    const newSessionBtn = document.getElementById('new-session-btn');
+    const errorMessage = document.getElementById('error-message');
+
+    // Auth check
+    const token = getToken();
+    if (!token) {
+      window.location.href = '/login.html';
+    }
+
+    // Check for session data
+    const sessionDataStr = sessionStorage.getItem('currentSession');
+    if (!sessionDataStr) {
+      window.location.href = '/session-setup.html';
+    }
+
+    currentSessionData = JSON.parse(sessionDataStr);
+
+    // API helper
+    async function apiRequest(endpoint, options = {}) {
+      const response = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          ...options.headers
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `Request failed with status ${response.status}`);
+      }
+
+      return data;
+    }
+
+    // Show error
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.classList.remove('hidden');
+      setTimeout(() => {
+        errorMessage.classList.add('hidden');
+      }, 5000);
+    }
+
+    // Render player card
+    function renderPlayerCard(player) {
+      const card = document.createElement('div');
+      card.className = 'player-display-card';
+      card.innerHTML = `
+        <div class="player-name">${player.name}</div>
+        <div class="player-meta">${player.position}</div>
+        <div class="player-rating">${player.finalRating}</div>
+      `;
+      return card;
+    }
+
+    // Display teams
+    function displayTeams() {
+      const { teams, bench, balance, groupName } = currentSessionData;
+
+      // Update title
+      sessionTitle.textContent = `Teams - ${groupName}`;
+
+      // Display balance
+      ratingDiff.textContent = balance.ratingDifference;
+      balanceStatus.textContent = balance.isBalanced ? 'Balanced' : 'Unbalanced';
+      balanceStatus.className = `metric-value badge ${balance.isBalanced ? 'badge-success' : 'badge-warning'}`;
+
+      // Display Team 1
+      team1Total.textContent = `Total: ${teams[0].totalRating}`;
+      team1Players.innerHTML = '';
+      teams[0].players.forEach(player => {
+        team1Players.appendChild(renderPlayerCard(player));
+      });
+
+      // Display Team 2
+      team2Total.textContent = `Total: ${teams[1].totalRating}`;
+      team2Players.innerHTML = '';
+      teams[1].players.forEach(player => {
+        team2Players.appendChild(renderPlayerCard(player));
+      });
+
+      // Display bench (if any)
+      if (bench && bench.length > 0) {
+        benchSection.classList.remove('hidden');
+        benchPlayers.innerHTML = '';
+        bench.forEach(player => {
+          benchPlayers.appendChild(renderPlayerCard(player));
+        });
+      } else {
+        benchSection.classList.add('hidden');
+      }
+    }
+
+    // Regenerate teams
+    regenerateBtn.addEventListener('click', async () => {
+      try {
+        regenerateBtn.disabled = true;
+        regenerateBtn.textContent = 'Generating...';
+
+        const teamsData = await apiRequest('/api/sessions/generate-teams', {
+          method: 'POST',
+          body: JSON.stringify({
+            sessionId: currentSessionData.sessionId,
+            teamSize: currentSessionData.teamSize
+          })
+        });
+
+        // Update session data
+        currentSessionData.teams = teamsData.teams;
+        currentSessionData.bench = teamsData.bench;
+        currentSessionData.balance = teamsData.balance;
+        sessionStorage.setItem('currentSession', JSON.stringify(currentSessionData));
+
+        // Redisplay
+        displayTeams();
+
+        regenerateBtn.disabled = false;
+        regenerateBtn.textContent = 'Regenerate Teams';
+      } catch (error) {
+        console.error('Failed to regenerate teams:', error);
+        showError('Failed to regenerate teams: ' + error.message);
+        regenerateBtn.disabled = false;
+        regenerateBtn.textContent = 'Regenerate Teams';
+      }
+    });
+
+    // New session button
+    newSessionBtn.addEventListener('click', () => {
+      sessionStorage.removeItem('currentSession');
+      window.location.href = '/session-setup.html';
+    });
+
+    // Initialize
+    displayTeams();
+  </script>
+</body>
+</html>

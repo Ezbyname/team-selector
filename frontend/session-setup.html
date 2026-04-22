@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Session Setup - Team Selector</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Session Setup</h1>
+      <button id="logout-btn" class="btn btn-secondary">Logout</button>
+    </header>
+
+    <main>
+      <!-- Step 1: Select Group -->
+      <section id="group-selection" class="card">
+        <h2>1. Select Group</h2>
+        <div id="groups-list" class="loading">Loading groups...</div>
+      </section>
+
+      <!-- Step 2: Select Players (hidden until group selected) -->
+      <section id="player-selection" class="card hidden">
+        <h2>2. Select Players Present Today</h2>
+        <p class="subtitle">Check all players who are present for this session</p>
+        <div id="players-list"></div>
+      </section>
+
+      <!-- Step 3: Team Configuration (hidden until players selected) -->
+      <section id="team-config" class="card hidden">
+        <h2>3. Team Configuration</h2>
+        <div class="form-group">
+          <label for="team-size">Players per team:</label>
+          <input type="number" id="team-size" min="2" max="10" value="5" class="input-large">
+        </div>
+        <button id="generate-btn" class="btn btn-primary btn-large" disabled>Generate Teams</button>
+      </section>
+
+      <div id="error-message" class="error-message hidden"></div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { getToken, clearAuth } from './lib/auth.js';
+
+    const API_BASE = window.location.origin;
+    let selectedGroupId = null;
+    let selectedPlayers = new Set();
+    let currentSessionId = null;
+
+    // Elements
+    const groupsList = document.getElementById('groups-list');
+    const playerSelection = document.getElementById('player-selection');
+    const playersList = document.getElementById('players-list');
+    const teamConfig = document.getElementById('team-config');
+    const teamSizeInput = document.getElementById('team-size');
+    const generateBtn = document.getElementById('generate-btn');
+    const errorMessage = document.getElementById('error-message');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    // Auth check
+    const token = getToken();
+    if (!token) {
+      window.location.href = '/login.html';
+    }
+
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+      clearAuth();
+      window.location.href = '/login.html';
+    });
+
+    // API helper
+    async function apiRequest(endpoint, options = {}) {
+      const response = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          ...options.headers
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `Request failed with status ${response.status}`);
+      }
+
+      return data;
+    }
+
+    // Show error
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.classList.remove('hidden');
+      setTimeout(() => {
+        errorMessage.classList.add('hidden');
+      }, 5000);
+    }
+
+    // Load groups
+    async function loadGroups() {
+      try {
+        const data = await apiRequest('/api/groups/list');
+
+        if (!data.groups || data.groups.length === 0) {
+          groupsList.innerHTML = '<p>No groups found. Create a group first.</p>';
+          return;
+        }
+
+        groupsList.innerHTML = '';
+        groupsList.classList.remove('loading');
+
+        data.groups.forEach(group => {
+          const groupCard = document.createElement('div');
+          groupCard.className = 'group-card';
+          groupCard.innerHTML = `
+            <h3>${group.name}</h3>
+            <p class="group-meta">${group.sport} • ${group.location || 'No location'}</p>
+            <p class="group-meta">${group.player_count || 0} players</p>
+          `;
+          groupCard.addEventListener('click', () => selectGroup(group.id, group.name));
+          groupsList.appendChild(groupCard);
+        });
+      } catch (error) {
+        console.error('Failed to load groups:', error);
+        showError('Failed to load groups: ' + error.message);
+        groupsList.innerHTML = '<p class="error">Failed to load groups</p>';
+      }
+    }
+
+    // Select group and load players
+    async function selectGroup(groupId, groupName) {
+      selectedGroupId = groupId;
+
+      // Highlight selected group
+      document.querySelectorAll('.group-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      event.target.closest('.group-card').classList.add('selected');
+
+      // Load players
+      try {
+        playersList.innerHTML = '<p class="loading">Loading players...</p>';
+        playerSelection.classList.remove('hidden');
+
+        const data = await apiRequest(`/api/players/list?groupId=${groupId}`);
+
+        if (!data.players || data.players.length === 0) {
+          playersList.innerHTML = '<p>No players in this group yet.</p>';
+          return;
+        }
+
+        playersList.innerHTML = '';
+        selectedPlayers.clear();
+
+        data.players.forEach(player => {
+          const playerCard = document.createElement('label');
+          playerCard.className = 'player-checkbox-card';
+          playerCard.innerHTML = `
+            <input type="checkbox" value="${player.id}" class="player-checkbox">
+            <div class="player-info">
+              <div class="player-name">${player.name}</div>
+              <div class="player-meta">${player.position || 'No Position'} • Rating: ${player.final_rating || player.default_rating}</div>
+            </div>
+          `;
+          playersList.appendChild(playerCard);
+
+          const checkbox = playerCard.querySelector('input');
+          checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+              selectedPlayers.add(player.id);
+            } else {
+              selectedPlayers.delete(player.id);
+            }
+            updateGenerateButton();
+          });
+        });
+
+        teamConfig.classList.remove('hidden');
+      } catch (error) {
+        console.error('Failed to load players:', error);
+        showError('Failed to load players: ' + error.message);
+        playersList.innerHTML = '<p class="error">Failed to load players</p>';
+      }
+    }
+
+    // Update generate button state
+    function updateGenerateButton() {
+      const teamSize = parseInt(teamSizeInput.value);
+      const minPlayers = teamSize * 2; // Need at least 2 full teams
+
+      if (selectedPlayers.size >= 2) {
+        generateBtn.disabled = false;
+        generateBtn.textContent = `Generate Teams (${selectedPlayers.size} players)`;
+      } else {
+        generateBtn.disabled = true;
+        generateBtn.textContent = 'Select at least 2 players';
+      }
+    }
+
+    // Team size change handler
+    teamSizeInput.addEventListener('input', updateGenerateButton);
+
+    // Generate teams
+    generateBtn.addEventListener('click', async () => {
+      if (selectedPlayers.size < 2) {
+        showError('Select at least 2 players');
+        return;
+      }
+
+      try {
+        generateBtn.disabled = true;
+        generateBtn.textContent = 'Generating...';
+
+        // Create session
+        const sessionData = await apiRequest('/api/sessions/create', {
+          method: 'POST',
+          body: JSON.stringify({ groupId: selectedGroupId })
+        });
+
+        currentSessionId = sessionData.session.id;
+
+        // Select players for session
+        await apiRequest('/api/sessions/select-players', {
+          method: 'POST',
+          body: JSON.stringify({
+            sessionId: currentSessionId,
+            playerIds: Array.from(selectedPlayers)
+          })
+        });
+
+        // Generate teams
+        const teamSize = parseInt(teamSizeInput.value);
+        const teamsData = await apiRequest('/api/sessions/generate-teams', {
+          method: 'POST',
+          body: JSON.stringify({
+            sessionId: currentSessionId,
+            teamSize: teamSize
+          })
+        });
+
+        // Store results and navigate to display page
+        sessionStorage.setItem('currentSession', JSON.stringify({
+          sessionId: currentSessionId,
+          groupName: teamsData.session.groupName,
+          teamSize: teamSize,
+          teams: teamsData.teams,
+          bench: teamsData.bench,
+          balance: teamsData.balance
+        }));
+
+        window.location.href = '/team-display.html';
+      } catch (error) {
+        console.error('Failed to generate teams:', error);
+        showError('Failed to generate teams: ' + error.message);
+        generateBtn.disabled = false;
+        updateGenerateButton();
+      }
+    });
+
+    // Initialize
+    loadGroups();
+  </script>
+</body>
+</html>

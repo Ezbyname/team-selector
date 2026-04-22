@@ -34,10 +34,10 @@ async function handler(req, res) {
   }
 
   try {
-    // Verify player exists
+    // Verify player exists and get group sport
     const { data: player, error: playerError } = await supabase
       .from('players')
-      .select('id, name, group_id')
+      .select('id, name, group_id, groups(sport)')
       .eq('id', playerId)
       .single();
 
@@ -45,21 +45,47 @@ async function handler(req, res) {
       return res.status(404).json({ error: 'Player not found' });
     }
 
-    // Upsert rating (insert or update if exists for this grader)
-    const { data: rating, error: upsertError } = await supabase
+    // Check if rating exists for this grader
+    const { data: existingRating } = await supabase
       .from('player_ratings')
-      .upsert({
-        player_id: playerId,
-        player_name: null, // New approach uses player_id, not name
-        sport: null,
-        grade,
-        graded_by: req.user.id,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'player_id,graded_by'
-      })
-      .select()
+      .select('id')
+      .eq('player_id', playerId)
+      .eq('graded_by', req.user.id)
       .single();
+
+    let rating, upsertError;
+    if (existingRating) {
+      // Update existing rating
+      const { data, error: updateError } = await supabase
+        .from('player_ratings')
+        .update({
+          grade,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingRating.id)
+        .select()
+        .single();
+      rating = data;
+      upsertError = updateError;
+    } else {
+      // Insert new rating
+      const groupSport = player.groups?.sport || 'basketball'; // Default to basketball if not found
+      const { data, error: insertError } = await supabase
+        .from('player_ratings')
+        .insert({
+          player_id: playerId,
+          player_name: player.name, // Use player name from verified player record
+          sport: groupSport, // Use sport from player's group
+          grade,
+          graded_by: req.user.id
+        })
+        .select()
+        .single();
+      rating = data;
+      upsertError = insertError;
+    }
+
+    console.log('Rating upsert result:', { rating, player_id: rating?.player_id, grade: rating?.grade, graded_by: rating?.graded_by });
 
     if (upsertError) {
       console.error('Failed to save rating:', upsertError);
@@ -69,6 +95,8 @@ async function handler(req, res) {
     // Calculate final grade
     const { data: finalGradeData, error: calcError } = await supabase
       .rpc('get_player_final_rating', { p_player_id: playerId });
+
+    console.log('get_player_final_rating result:', { playerId, finalGradeData, error: calcError });
 
     if (calcError) {
       console.error('Failed to calculate final grade:', calcError);
@@ -81,6 +109,8 @@ async function handler(req, res) {
       .from('player_ratings')
       .select('grade, graded_by, auth_users(phone)')
       .eq('player_id', playerId);
+
+    console.log('All ratings for player:', { playerId, allRatings, count: allRatings?.length });
 
     // Log action
     await supabase

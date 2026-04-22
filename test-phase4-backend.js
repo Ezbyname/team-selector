@@ -90,6 +90,8 @@ async function cleanup() {
   await supabase.from('groups').delete().ilike('name', 'Test Group%');
   await supabase.from('groups').delete().ilike('name', '%Test%');
   await supabase.from('groups').delete().eq('location', 'Atlit');
+  await supabase.from('permanent_groups').delete().ilike('name', 'Test Group%');
+  await supabase.from('permanent_groups').delete().ilike('name', '%Test%');
 
   // Delete test users
   for (const user of Object.values(testUsers)) {
@@ -119,6 +121,21 @@ async function cleanup() {
   for (const user of Object.values(testUsers)) {
     const phoneNormalized = normalizePhone(user.phone);
     await supabase.from('auth_users').delete().eq('phone_normalized', phoneNormalized);
+  }
+
+  // Also delete grader2 user (created during Test 3.2)
+  const grader2Phone = '058-333-3333';
+  const grader2Norm = normalizePhone(grader2Phone);
+  const { data: grader2Data } = await supabase
+    .from('auth_users')
+    .select('id')
+    .eq('phone_normalized', grader2Norm)
+    .single();
+
+  if (grader2Data) {
+    await supabase.from('player_ratings').delete().eq('graded_by', grader2Data.id);
+    await supabase.from('admin_actions').delete().eq('admin_id', grader2Data.id);
+    await supabase.from('auth_users').delete().eq('phone_normalized', grader2Norm);
   }
 
   log('Cleanup complete\n', 'success');
@@ -372,14 +389,24 @@ async function runTests() {
       grade: 7
     }
   });
-  test('Admin grades player with 7', grade1.status === 200);
-  test('Final rating is 7 (single grader)', grade1.data.rating?.finalRating === 7);
+
+  console.log('Grade1 request result:', {
+    status: grade1.status,
+    data: JSON.stringify(grade1.data, null, 2)
+  });
+
+  test('Admin grades player with 7', grade1.status === 200,
+    grade1.status !== 200 ? `Got status ${grade1.status}: ${JSON.stringify(grade1.data)}` : '');
+  test('Final rating is 7 (single grader)', grade1.data.rating?.finalRating === 7,
+    grade1.data.rating?.finalRating !== 7 ? `Got finalRating ${grade1.data.rating?.finalRating}` : '');
 
   // Test 3.2: Create second grader
   const grader2Phone = '058-333-3333';
   const grader2Otp = await request('/api/auth/send-otp', { body: { phone: grader2Phone } });
 
-  if (grader2Otp.status === 200) {
+  console.log('Grader2 OTP result:', { status: grader2Otp.status, hasCode: !!grader2Otp.data.otpCode });
+
+  if (grader2Otp.status === 200 && grader2Otp.data.otpCode) {
     await request('/api/auth/verify-otp', {
       body: { phone: grader2Phone, code: grader2Otp.data.otpCode }
     });
@@ -392,7 +419,9 @@ async function runTests() {
       }
     });
 
-    if (grader2Reg.status === 201) {
+    console.log('Grader2 registration result:', { status: grader2Reg.status });
+
+    if (grader2Reg.status === 201 || grader2Reg.status === 409) {
       // Grant grading permission
       const phoneNorm = normalizePhone(grader2Phone);
       await supabase
@@ -405,6 +434,8 @@ async function runTests() {
         body: { phone: grader2Phone, password: 'Grader123!' }
       });
 
+      console.log('Grader2 login result:', { status: grader2Login.status, hasToken: !!grader2Login.data.accessToken });
+
       if (grader2Login.status === 200) {
         // Grade same player with 8
         const grade2 = await request('/api/players/grade', {
@@ -415,10 +446,22 @@ async function runTests() {
           }
         });
 
-        test('Second grader grades with 8', grade2.status === 200);
-        test('Grader count is 2', grade2.data.rating?.graderCount === 2);
+        console.log('Grade2 result:', {
+          status: grade2.status,
+          finalRating: grade2.data.rating?.finalRating,
+          graderCount: grade2.data.rating?.graderCount,
+          allGrades: grade2.data.rating?.allGrades
+        });
+
+        test('Second grader grades with 8', grade2.status === 200,
+          grade2.status !== 200 ? `Got status ${grade2.status}: ${JSON.stringify(grade2.data)}` : '');
+        test('Grader count is 2', grade2.data.rating?.graderCount === 2,
+          grade2.data.rating?.graderCount !== 2 ? `Got count ${grade2.data.rating?.graderCount}` : '');
         // Average: (7 + 8) / 2 = 7.5 → ceiling = 8
-        test('Final rating is 8 (avg 7.5 → ceiling)', grade2.data.rating?.finalRating === 8);
+        test('Final rating is 8 (avg 7.5 → ceiling)', grade2.data.rating?.finalRating === 8,
+          grade2.data.rating?.finalRating !== 8 ? `Got finalRating ${grade2.data.rating?.finalRating}` : '');
+      } else {
+        console.log('Grader2 login failed, skipping multi-grader tests');
       }
 
       // Cleanup grader 2
@@ -433,7 +476,11 @@ async function runTests() {
         await supabase.from('admin_actions').delete().eq('admin_id', grader2Data.id);
         await supabase.from('auth_users').delete().eq('phone_normalized', grader2Norm);
       }
+    } else {
+      console.log('Grader2 registration failed, skipping multi-grader tests');
     }
+  } else {
+    console.log('Grader2 OTP failed, skipping multi-grader tests');
   }
 
   log('');
@@ -449,8 +496,16 @@ async function runTests() {
       sessionDate: '2026-04-25'
     }
   });
-  test('Create game session', createSession.status === 201);
-  test('Session has ID', !!createSession.data.session?.id);
+
+  console.log('CreateSession result:', {
+    status: createSession.status,
+    data: JSON.stringify(createSession.data, null, 2)
+  });
+
+  test('Create game session', createSession.status === 201,
+    createSession.status !== 201 ? `Got status ${createSession.status}: ${JSON.stringify(createSession.data)}` : '');
+  test('Session has ID', !!createSession.data.session?.id,
+    !createSession.data.session?.id ? `Session data: ${JSON.stringify(createSession.data)}` : '');
 
   if (createSession.data.session?.id) {
     testData.sessionId = createSession.data.session.id;
