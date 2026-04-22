@@ -39,7 +39,7 @@ async function handler(req, res) {
       .insert({
         group_id: groupId,
         name: name.trim(),
-        position: position?.trim() || null,
+        player_position: position?.trim() || null,
         default_rating: rating
       })
       .select()
@@ -59,7 +59,7 @@ async function handler(req, res) {
         id: player.id,
         groupId: player.group_id,
         name: player.name,
-        position: player.position,
+        position: player.player_position,
         defaultRating: player.default_rating,
         createdAt: player.created_at
       }

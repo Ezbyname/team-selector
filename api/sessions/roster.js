@@ -53,7 +53,7 @@ async function handler(req, res) {
       roster: roster.map(r => ({
         playerId: r.player_id,
         name: r.player_name,
-        position: r.position,
+        position: r.player_position,
         defaultRating: r.default_rating,
         finalRating: r.final_rating,
         graderCount: parseInt(r.grader_count)

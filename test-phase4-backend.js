@@ -41,7 +41,7 @@ function log(message, type = 'info') {
   console.log(`${colors[type]}${message}\x1b[0m`);
 }
 
-function test(name, passed, details = '') {
+function test(name, passed, details = '', debugData = null) {
   results.tests.push({ name, passed, details });
   if (passed) {
     results.passed++;
@@ -50,6 +50,9 @@ function test(name, passed, details = '') {
     results.failed++;
     log(`✗ ${name}`, 'error');
     if (details) log(`  ${details}`, 'error');
+    if (debugData) {
+      log(`  Debug: ${JSON.stringify(debugData, null, 2)}`, 'warning');
+    }
   }
 }
 
@@ -234,8 +237,12 @@ async function runTests() {
     method: 'GET',
     headers: { Authorization: `Bearer ${testUsers.admin.token}` }
   });
-  test('List groups works', listGroups.status === 200);
-  test('Group appears in list', listGroups.data.groups?.some(g => g.name === 'Test Group Atlit'));
+  test('List groups works', listGroups.status === 200,
+    listGroups.status !== 200 ? `Got status ${listGroups.status}` : '',
+    listGroups.status !== 200 ? listGroups.data : null);
+  test('Group appears in list', listGroups.data.groups?.some(g => g.name === 'Test Group Atlit'),
+    !listGroups.data.groups?.some(g => g.name === 'Test Group Atlit') ? 'Group not found in list' : '',
+    !listGroups.data.groups?.some(g => g.name === 'Test Group Atlit') ? { groups: listGroups.data.groups } : null);
 
   log('');
 
@@ -259,8 +266,12 @@ async function runTests() {
       }
     });
 
-    test(`Add ${player.name} with default rating`, addPlayer.status === 201);
-    test(`${player.name} has default rating 5`, addPlayer.data.player?.defaultRating === 5);
+    test(`Add ${player.name} with default rating`, addPlayer.status === 201,
+      addPlayer.status !== 201 ? `Got status ${addPlayer.status}` : '',
+      addPlayer.status !== 201 ? addPlayer.data : null);
+    test(`${player.name} has default rating 5`, addPlayer.data.player?.defaultRating === 5,
+      addPlayer.data.player?.defaultRating !== 5 ? `Got rating ${addPlayer.data.player?.defaultRating}` : '',
+      addPlayer.data.player?.defaultRating !== 5 ? addPlayer.data : null);
 
     if (addPlayer.data.player?.id) {
       testData.playerIds.push(addPlayer.data.player.id);

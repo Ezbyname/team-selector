@@ -46,7 +46,7 @@ async function handler(req, res) {
         return {
           id: player.id,
           name: player.name,
-          position: player.position,
+          position: player.player_position,
           defaultRating: player.default_rating,
           finalRating: finalRating || player.default_rating,
           graderCount: ratings?.length || 0,
