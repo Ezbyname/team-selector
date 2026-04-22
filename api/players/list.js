@@ -6,7 +6,7 @@
  */
 
 import { supabase } from '../../lib/supabase.js';
-import { requireAuth } from '../../lib/permissions.js';
+import { requireAuth, canViewSensitiveData } from '../../lib/permissions.js';
 
 async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -18,6 +18,8 @@ async function handler(req, res) {
   if (!groupId) {
     return res.status(400).json({ error: 'groupId query parameter is required' });
   }
+
+  const canSeeSensitiveData = canViewSensitiveData(req.user);
 
   try {
     // Get all players in group
@@ -35,23 +37,34 @@ async function handler(req, res) {
     // Get final ratings for all players
     const playersWithRatings = await Promise.all(
       players.map(async (player) => {
-        const { data: finalRating } = await supabase
-          .rpc('get_player_final_rating', { p_player_id: player.id });
-
-        const { data: ratings } = await supabase
-          .from('player_ratings')
-          .select('grade, graded_by, auth_users(phone)')
-          .eq('player_id', player.id);
-
-        return {
+        const baseData = {
           id: player.id,
           name: player.name,
-          position: player.player_position,
-          defaultRating: player.default_rating,
-          finalRating: finalRating || player.default_rating,
-          graderCount: ratings?.length || 0,
-          grades: ratings?.map(r => r.grade) || []
+          position: player.position || 'No Position'
         };
+
+        // Only include sensitive data for admin/sub-admin
+        if (canSeeSensitiveData) {
+          const { data: finalRating } = await supabase
+            .rpc('get_player_final_rating', { p_player_id: player.id });
+
+          const { data: ratings } = await supabase
+            .from('player_ratings')
+            .select('grade, graded_by, auth_users(phone)')
+            .eq('player_id', player.id);
+
+          return {
+            ...baseData,
+            defaultRating: player.default_rating,
+            finalRating: finalRating || player.default_rating,
+            graderCount: ratings?.length || 0,
+            grades: ratings?.map(r => r.grade) || [],
+            isStar: player.is_star || false
+          };
+        }
+
+        // Regular users see only basic info
+        return baseData;
       })
     );
 

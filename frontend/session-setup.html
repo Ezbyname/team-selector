@@ -169,11 +169,15 @@
         data.players.forEach(player => {
           const playerCard = document.createElement('label');
           playerCard.className = 'player-checkbox-card';
+
+          // Show position only (ratings hidden for regular users)
+          const metaText = player.position || 'No Position';
+
           playerCard.innerHTML = `
             <input type="checkbox" value="${player.id}" class="player-checkbox">
             <div class="player-info">
               <div class="player-name">${player.name}</div>
-              <div class="player-meta">${player.position || 'No Position'} • Rating: ${player.finalRating || player.defaultRating}</div>
+              <div class="player-meta">${metaText}</div>
             </div>
           `;
           playersList.appendChild(playerCard);

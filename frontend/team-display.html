@@ -144,10 +144,14 @@
     function renderPlayerCard(player) {
       const card = document.createElement('div');
       card.className = 'player-display-card';
+
+      // Only show rating if it exists (admin/sub-admin can see it)
+      const ratingHTML = player.finalRating ? `<div class="player-rating">${player.finalRating}</div>` : '';
+
       card.innerHTML = `
         <div class="player-name">${player.name}</div>
         <div class="player-meta">${player.position}</div>
-        <div class="player-rating">${player.finalRating}</div>
+        ${ratingHTML}
       `;
       return card;
     }
@@ -159,20 +163,28 @@
       // Update title
       sessionTitle.textContent = `Teams - ${groupName}`;
 
-      // Display balance
-      ratingDiff.textContent = balance.ratingDifference;
-      balanceStatus.textContent = balance.isBalanced ? 'Balanced' : 'Unbalanced';
-      balanceStatus.className = `metric-value badge ${balance.isBalanced ? 'badge-success' : 'badge-warning'}`;
+      // Display balance (only if data exists - admin/sub-admin)
+      const balanceSection = document.getElementById('balance-summary');
+      if (balance && balance.ratingDifference !== undefined) {
+        ratingDiff.textContent = balance.ratingDifference;
+        balanceStatus.textContent = balance.isBalanced ? 'Balanced' : 'Unbalanced';
+        balanceStatus.className = `metric-value badge ${balance.isBalanced ? 'badge-success' : 'badge-warning'}`;
+        balanceSection.classList.remove('hidden');
+      } else {
+        balanceSection.classList.add('hidden');
+      }
 
       // Display Team 1
-      team1Total.textContent = `Total: ${teams[0].totalRating}`;
+      const team1TotalText = teams[0].totalRating ? `Total: ${teams[0].totalRating}` : '';
+      team1Total.textContent = team1TotalText;
       team1Players.innerHTML = '';
       teams[0].players.forEach(player => {
         team1Players.appendChild(renderPlayerCard(player));
       });
 
       // Display Team 2
-      team2Total.textContent = `Total: ${teams[1].totalRating}`;
+      const team2TotalText = teams[1].totalRating ? `Total: ${teams[1].totalRating}` : '';
+      team2Total.textContent = team2TotalText;
       team2Players.innerHTML = '';
       teams[1].players.forEach(player => {
         team2Players.appendChild(renderPlayerCard(player));

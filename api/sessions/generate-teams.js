@@ -6,7 +6,7 @@
  */
 
 import { supabase } from '../../lib/supabase.js';
-import { requireAuth } from '../../lib/permissions.js';
+import { requireAuth, canViewSensitiveData } from '../../lib/permissions.js';
 import { generateBalancedTeams } from '../../lib/teamBalancer.js';
 
 async function handler(req, res) {
@@ -54,6 +54,15 @@ async function handler(req, res) {
       return res.status(400).json({ error: 'Need at least 2 players to generate teams' });
     }
 
+    // Get player connections for this session
+    const { data: connections, error: connectionsError } = await supabase
+      .rpc('get_session_connections', { p_session_id: sessionId });
+
+    if (connectionsError) {
+      console.error('Failed to get connections:', connectionsError);
+      // Continue without connections rather than failing
+    }
+
     // Format players for balancing algorithm
     // If player has been graded (grader_count > 0), use final_rating (avg + ceiling)
     // Otherwise, use their individual default_rating
@@ -66,10 +75,19 @@ async function handler(req, res) {
       isStar: p.is_star || false
     }));
 
-    // Generate balanced teams
-    const result = generateBalancedTeams(players, teamSize, teamCount);
+    // Format connections for balancing algorithm
+    const formattedConnections = (connections || []).map(c => ({
+      playerAId: c.player_a_id,
+      playerBId: c.player_b_id,
+      connectionType: c.connection_type
+    }));
 
-    // Format response
+    // Generate balanced teams with connection constraints
+    const result = generateBalancedTeams(players, teamSize, teamCount, 100, formattedConnections);
+
+    const canSeeSensitiveData = canViewSensitiveData(req.user);
+
+    // Format response based on user role
     return res.status(200).json({
       success: true,
       session: {
@@ -80,32 +98,59 @@ async function handler(req, res) {
       },
       teams: result.teams.map(team => ({
         teamNumber: team.teamNumber,
-        players: team.players.map(p => ({
-          id: p.id,
-          name: p.name,
-          position: p.position,
-          defaultRating: p.defaultRating,
-          finalRating: p.finalRating,
-          isStar: p.isStar
-        })),
-        totalRating: team.totalRating,
-        starCount: team.starCount,
+        players: team.players.map(p => {
+          const baseData = {
+            id: p.id,
+            name: p.name,
+            position: p.position
+          };
+
+          // Only include sensitive data for admin/sub-admin
+          if (canSeeSensitiveData) {
+            return {
+              ...baseData,
+              defaultRating: p.defaultRating,
+              finalRating: p.finalRating,
+              isStar: p.isStar
+            };
+          }
+
+          return baseData;
+        }),
+        // Only include team stats for admin/sub-admin
+        ...(canSeeSensitiveData && {
+          totalRating: team.totalRating,
+          starCount: team.starCount
+        }),
         positionBreakdown: team.positionBreakdown
       })),
-      bench: result.bench.map(p => ({
-        id: p.id,
-        name: p.name,
-        position: p.position,
-        finalRating: p.finalRating
-      })),
-      balance: {
-        ratingDifference: result.balance.ratingDifference,
-        starDifference: result.balance.starDifference,
-        positionImbalancePenalty: result.balance.positionImbalancePenalty,
-        teamSizeDifference: result.balance.teamSizeDifference,
-        totalScore: result.balance.totalScore,
-        isBalanced: result.balance.isBalanced
-      }
+      bench: result.bench.map(p => {
+        const baseData = {
+          id: p.id,
+          name: p.name,
+          position: p.position
+        };
+
+        if (canSeeSensitiveData) {
+          return {
+            ...baseData,
+            finalRating: p.finalRating
+          };
+        }
+
+        return baseData;
+      }),
+      // Only include balance details for admin/sub-admin
+      ...(canSeeSensitiveData && {
+        balance: {
+          ratingDifference: result.balance.ratingDifference,
+          starDifference: result.balance.starDifference,
+          positionImbalancePenalty: result.balance.positionImbalancePenalty,
+          teamSizeDifference: result.balance.teamSizeDifference,
+          totalScore: result.balance.totalScore,
+          isBalanced: result.balance.isBalanced
+        }
+      })
     });
   } catch (error) {
     console.error('Generate teams error:', error);
