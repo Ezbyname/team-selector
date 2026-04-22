@@ -70,7 +70,13 @@ async function request(endpoint, options = {}) {
     const data = await response.json();
     return { status: response.status, data };
   } catch (error) {
-    return { status: 0, error: error.message };
+    if (error.code === 'ECONNREFUSED' || error.message.includes('ECONNREFUSED')) {
+      log('\n✗ ERROR: Dev server is not running!', 'error');
+      log('  Start the server with: vercel dev', 'error');
+      log('  Then run this test again.\n', 'error');
+      process.exit(1);
+    }
+    return { status: 0, error: error.message, data: { error: error.message } };
   }
 }
 
@@ -210,6 +216,12 @@ async function runTests() {
       sport: 'basketball'
     }
   });
+
+  if (createGroup.status !== 201) {
+    log(`  Create group failed: ${createGroup.status}`, 'error');
+    log(`  Response: ${JSON.stringify(createGroup.data)}`, 'error');
+  }
+
   test('Admin creates group', createGroup.status === 201);
   test('Group has ID', !!createGroup.data.group?.id);
 

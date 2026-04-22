@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS players (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
-  position TEXT,
+  player_position TEXT,
   default_rating INTEGER DEFAULT 5 CHECK (default_rating >= 1 AND default_rating <= 10),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -276,7 +276,7 @@ CREATE OR REPLACE FUNCTION get_session_roster(p_session_id UUID)
 RETURNS TABLE (
   player_id UUID,
   player_name TEXT,
-  position TEXT,
+  player_position TEXT,
   default_rating INTEGER,
   final_rating INTEGER,
   grader_count BIGINT
@@ -289,7 +289,7 @@ BEGIN
   SELECT
     p.id,
     p.name,
-    p.position,
+    p.player_position,
     p.default_rating,
     get_player_final_rating(p.id) AS final_rating,
     COUNT(pr.id) AS grader_count
@@ -297,7 +297,7 @@ BEGIN
   JOIN players p ON sp.player_id = p.id
   LEFT JOIN player_ratings pr ON pr.player_id = p.id
   WHERE sp.session_id = p_session_id
-  GROUP BY p.id, p.name, p.position, p.default_rating
+  GROUP BY p.id, p.name, p.player_position, p.default_rating
   ORDER BY p.name;
 END;
 $$;
