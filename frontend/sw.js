@@ -33,26 +33,53 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch with Cache First Strategy
+// Fetch with Network First for API, Cache First for Static Assets
 self.addEventListener('fetch', event => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // NEVER cache API requests - always go to network
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // ONLY cache GET requests for static assets
+  if (request.method !== 'GET') {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // Cache static assets only (HTML, CSS, JS, images, fonts)
+  const isStaticAsset = /\.(html|css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/i.test(url.pathname) ||
+                        url.pathname === '/' ||
+                        url.pathname === '/index.html' ||
+                        url.pathname === '/manifest.json';
+
+  if (!isStaticAsset) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // Cache-first strategy for static assets
   event.respondWith(
-    caches.match(event.request)
+    caches.match(request)
       .then(response => {
         if (response) {
           return response;
         }
-        return fetch(event.request).then(response => {
+        return fetch(request).then(response => {
           // Check if valid response
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
 
-          // Clone the response
+          // Clone and cache the response
           const responseToCache = response.clone();
 
           caches.open(CACHE_NAME)
             .then(cache => {
-              cache.put(event.request, responseToCache);
+              cache.put(request, responseToCache);
             });
 
           return response;
