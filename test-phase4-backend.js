@@ -86,8 +86,10 @@ async function request(endpoint, options = {}) {
 async function cleanup() {
   log('\nCleaning up test data...', 'info');
 
-  // Delete test groups (cascades to players, sessions, etc.)
+  // Delete test groups by name pattern (cascades to players, sessions, etc.)
   await supabase.from('groups').delete().ilike('name', 'Test Group%');
+  await supabase.from('groups').delete().ilike('name', '%Test%');
+  await supabase.from('groups').delete().eq('location', 'Atlit');
 
   // Delete test users
   for (const user of Object.values(testUsers)) {
@@ -101,13 +103,19 @@ async function cleanup() {
       .single();
 
     if (userData) {
+      // Delete player ratings by this user
+      await supabase.from('player_ratings').delete().eq('graded_by', userData.id);
+
+      // Delete groups created by this user (cascades to players, sessions, etc.)
+      await supabase.from('groups').delete().eq('created_by', userData.id);
+
       // Delete admin actions
       await supabase.from('admin_actions').delete().eq('admin_id', userData.id);
       await supabase.from('admin_actions').delete().eq('target_user_id', userData.id);
     }
   }
 
-  // Delete test users
+  // Now delete test users (all FKs resolved)
   for (const user of Object.values(testUsers)) {
     const phoneNormalized = normalizePhone(user.phone);
     await supabase.from('auth_users').delete().eq('phone_normalized', phoneNormalized);
@@ -139,15 +147,31 @@ async function setupTestUsers() {
 
     if (adminReg.status === 201) {
       testUsers.admin.id = adminReg.data.user.id;
+      log(`Test admin registered (ID: ${testUsers.admin.id})`, 'info');
+    } else if (adminReg.status === 409) {
+      // User already exists, fetch ID
+      const phoneNormalized = normalizePhone(testUsers.admin.phone);
+      const { data: existingUser } = await supabase
+        .from('auth_users')
+        .select('id')
+        .eq('phone_normalized', phoneNormalized)
+        .single();
 
-      // Promote to admin
+      if (existingUser) {
+        testUsers.admin.id = existingUser.id;
+        log(`Test admin already exists (ID: ${testUsers.admin.id})`, 'info');
+      }
+    } else {
+      log(`Admin registration failed: ${adminReg.status} - ${JSON.stringify(adminReg.data)}`, 'error');
+    }
+
+    // Promote to admin (idempotent)
+    if (testUsers.admin.id) {
       const phoneNormalized = normalizePhone(testUsers.admin.phone);
       await supabase
         .from('auth_users')
         .update({ role: 'admin', can_grade_players: true })
         .eq('phone_normalized', phoneNormalized);
-
-      log(`Test admin registered and promoted`, 'info');
     }
   }
 
@@ -187,7 +211,17 @@ async function loginTestUsers() {
 
   if (adminLogin.status === 200) {
     testUsers.admin.token = adminLogin.data.accessToken;
-    log(`Admin logged in`, 'info');
+    // Decode token to verify user ID
+    const tokenParts = adminLogin.data.accessToken.split('.');
+    if (tokenParts.length === 3) {
+      const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+      log(`Admin logged in - User ID in token: ${payload.sub}`, 'info');
+      log(`Admin logged in - User ID from registration: ${testUsers.admin.id}`, 'info');
+    } else {
+      log(`Admin logged in`, 'info');
+    }
+  } else {
+    log(`Admin login failed: ${adminLogin.status}`, 'error');
   }
 
   const userLogin = await request('/api/auth/login', {
