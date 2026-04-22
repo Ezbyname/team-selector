@@ -893,6 +893,25 @@ header h1 {
     font-size: 1em;
 }
 
+.team-config-info {
+    background: var(--background);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.team-config-info p {
+    margin: 8px 0;
+    font-size: 1.1em;
+    color: var(--text-primary);
+}
+
+.team-config-info strong {
+    color: var(--primary-color);
+    font-size: 1.2em;
+}
+
 .hidden {
     display: none !important;
 }
