@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "vercel dev",
-    "build": "echo 'No build step required - serverless functions'",
+    "build": "echo 'No build step required'",
     "deploy": "vercel --prod",
     "validate:env": "node --env-file=.env.local validate-env.js",
     "test:unit": "node test-phone.js && node --env-file=.env.local test-jwt.js",
