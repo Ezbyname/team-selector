@@ -15,29 +15,59 @@ async function handler(req, res) {
   const { sport } = req.query;
 
   try {
+    // Query groups table directly instead of view
     let query = supabase
-      .from('group_stats')
-      .select('*')
+      .from('groups')
+      .select('id, name, location, sport, created_by, created_at, updated_at')
       .order('updated_at', { ascending: false });
 
     if (sport && ['basketball', 'soccer'].includes(sport)) {
       query = query.eq('sport', sport);
     }
 
-    const { data: groups, error } = await query;
+    const { data: groups, error: groupsError } = await query;
 
-    if (error) {
-      console.error('Failed to list groups:', error);
-      return res.status(500).json({ error: 'Failed to list groups' });
+    if (groupsError) {
+      console.error('Failed to list groups:', groupsError);
+      return res.status(500).json({ error: 'Failed to list groups', details: groupsError.message });
     }
+
+    // Enrich with player/session counts
+    const groupsWithStats = await Promise.all(
+      (groups || []).map(async (group) => {
+        // Count players
+        const { count: playerCount } = await supabase
+          .from('players')
+          .select('id', { count: 'exact', head: true })
+          .eq('group_id', group.id);
+
+        // Count sessions
+        const { count: sessionCount } = await supabase
+          .from('game_sessions')
+          .select('id', { count: 'exact', head: true })
+          .eq('group_id', group.id);
+
+        return {
+          id: group.id,
+          name: group.name,
+          location: group.location,
+          sport: group.sport,
+          createdBy: group.created_by,
+          playerCount: playerCount || 0,
+          sessionCount: sessionCount || 0,
+          createdAt: group.created_at,
+          updatedAt: group.updated_at
+        };
+      })
+    );
 
     return res.status(200).json({
       success: true,
-      groups: groups || []
+      groups: groupsWithStats
     });
   } catch (error) {
     console.error('List groups error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 }
 

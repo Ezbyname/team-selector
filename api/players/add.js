@@ -49,8 +49,20 @@ async function handler(req, res) {
       if (error.code === '23505') { // Unique violation
         return res.status(409).json({ error: 'Player already exists in this group' });
       }
+      if (error.code === '23502') { // NOT NULL violation
+        console.error('NOT NULL constraint violation:', error);
+        return res.status(500).json({
+          error: 'Failed to add player',
+          details: `Missing required field: ${error.message}`,
+          code: error.code
+        });
+      }
       console.error('Failed to add player:', error);
-      return res.status(500).json({ error: 'Failed to add player' });
+      return res.status(500).json({
+        error: 'Failed to add player',
+        details: error.message,
+        code: error.code
+      });
     }
 
     return res.status(201).json({
