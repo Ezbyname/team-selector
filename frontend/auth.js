@@ -36,22 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
  * Check for existing session and setup token refresh
  */
 async function initAuth() {
-  // Setup country selector
-  const countrySelect = document.getElementById('countrySelect');
-  const countryButton = document.getElementById('countryButton');
-
-  if (countrySelect) {
-    countrySelect.addEventListener('change', updateCountryDisplay);
-    updateCountryDisplay(); // Set initial state
-  }
-
-  // Click country button to open dropdown
-  if (countryButton && countrySelect) {
-    countryButton.addEventListener('click', () => {
-      countrySelect.focus();
-      countrySelect.click();
-    });
-  }
+  // Setup custom country selector dropdown
+  setupCountrySelector();
 
   // Check if user is already authenticated
   const savedToken = localStorage.getItem('accessToken');
@@ -80,36 +66,68 @@ async function initAuth() {
 }
 
 /**
- * Update country display and phone prefix when country changes
+ * Setup custom country selector with dropdown
  */
-function updateCountryDisplay() {
-  const countrySelect = document.getElementById('countrySelect');
+function setupCountrySelector() {
+  const countrySelector = document.getElementById('countrySelector');
+  const countryDropdown = document.getElementById('countryDropdown');
   const phoneInput = document.getElementById('phoneInput');
   const phonePrefix = document.getElementById('phonePrefix');
-  const countryButton = document.getElementById('countryButton');
+  const selectedFlag = document.getElementById('selectedFlag');
+  const selectedCode = document.getElementById('selectedCode');
 
-  if (!countrySelect || !phoneInput) return;
+  if (!countrySelector || !countryDropdown) return;
 
-  const selectedOption = countrySelect.options[countrySelect.selectedIndex];
-  const countryCode = countrySelect.value; // e.g., +972
-  const flag = selectedOption.getAttribute('data-flag') || '🏳️';
-  const code = selectedOption.getAttribute('data-code') || 'XX';
+  // Toggle dropdown on click
+  countrySelector.addEventListener('click', (e) => {
+    e.stopPropagation();
+    countryDropdown.classList.toggle('hidden');
+  });
 
-  // Update country button display (flag + code)
-  if (countryButton) {
-    const flagSpan = countryButton.querySelector('.country-flag');
-    const codeSpan = countryButton.querySelector('.country-code');
-    if (flagSpan) flagSpan.textContent = flag;
-    if (codeSpan) codeSpan.textContent = code;
+  // Handle country selection
+  const countryOptions = countryDropdown.querySelectorAll('.country-option');
+  countryOptions.forEach(option => {
+    option.addEventListener('click', (e) => {
+      e.stopPropagation();
+
+      const flag = option.getAttribute('data-flag');
+      const code = option.getAttribute('data-code');
+      const prefix = option.getAttribute('data-prefix');
+
+      // Update selector display
+      if (selectedFlag) selectedFlag.textContent = flag;
+      if (selectedCode) selectedCode.textContent = code;
+
+      // Update phone prefix
+      if (phonePrefix) phonePrefix.textContent = prefix;
+
+      // Store current country code for validation
+      authState.countryCode = prefix;
+
+      // Clear phone input
+      if (phoneInput) phoneInput.value = '';
+
+      // Close dropdown
+      countryDropdown.classList.add('hidden');
+    });
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!countrySelector.contains(e.target) && !countryDropdown.contains(e.target)) {
+      countryDropdown.classList.add('hidden');
+    }
+  });
+
+  // Digits only in phone input
+  if (phoneInput) {
+    phoneInput.addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/[^\d]/g, '');
+    });
   }
 
-  // Update phone prefix inside input
-  if (phonePrefix) {
-    phonePrefix.textContent = countryCode; // e.g., +972
-  }
-
-  // Clear input when country changes
-  phoneInput.value = '';
+  // Initialize with default (Israel)
+  authState.countryCode = '+972';
 }
 
 /**
