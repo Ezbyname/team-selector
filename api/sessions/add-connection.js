@@ -7,6 +7,7 @@
 
 import { supabase } from '../../lib/supabase.js';
 import { requireAuth } from '../../lib/permissions.js';
+import { validateConnectionGroupSize } from '../../lib/connectionValidator.js';
 
 async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -29,15 +30,20 @@ async function handler(req, res) {
   }
 
   try {
-    // Verify session exists
+    // Verify session exists and get sport
     const { data: session, error: sessionError } = await supabase
       .from('game_sessions')
-      .select('id')
+      .select('id, group_id, groups(sport)')
       .eq('id', sessionId)
       .single();
 
     if (sessionError || !session) {
       return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const sport = session.groups?.sport;
+    if (!sport) {
+      return res.status(500).json({ error: 'Failed to determine sport type' });
     }
 
     // Verify both players are in the session
@@ -49,6 +55,32 @@ async function handler(req, res) {
 
     if (playersError || !sessionPlayers || sessionPlayers.length !== 2) {
       return res.status(400).json({ error: 'Both players must be selected for this session' });
+    }
+
+    // Get existing connections (both group and session level)
+    const { data: existingConnections } = await supabase
+      .rpc('get_session_connections', { p_session_id: sessionId });
+
+    // Format for validator
+    const formattedConnections = (existingConnections || []).map(c => ({
+      playerId: c.player_a_id,
+      connectedToId: c.player_b_id
+    }));
+
+    // Validate group size limit
+    const validation = validateConnectionGroupSize(
+      playerId,
+      connectedToId,
+      formattedConnections,
+      sport
+    );
+
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: validation.error,
+        groupSize: validation.groupSize,
+        limit: validation.limit
+      });
     }
 
     // Create session connection

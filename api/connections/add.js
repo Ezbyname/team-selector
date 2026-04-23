@@ -7,6 +7,7 @@
 
 import { supabase } from '../../lib/supabase.js';
 import { requireAuth } from '../../lib/permissions.js';
+import { validateConnectionGroupSize } from '../../lib/connectionValidator.js';
 
 async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -46,6 +47,45 @@ async function handler(req, res) {
 
     if (players.some(p => p.group_id !== groupId)) {
       return res.status(400).json({ error: 'Both players must belong to the specified group' });
+    }
+
+    // Get group sport
+    const { data: group, error: groupError } = await supabase
+      .from('groups')
+      .select('sport')
+      .eq('id', groupId)
+      .single();
+
+    if (groupError || !group) {
+      console.error('Failed to fetch group:', groupError);
+      return res.status(500).json({ error: 'Failed to fetch group' });
+    }
+
+    // Get existing connections for validation
+    const { data: existingConnections, error: connectionsError } = await supabase
+      .from('player_connections')
+      .select('player_id, connected_to_id')
+      .eq('group_id', groupId);
+
+    if (connectionsError) {
+      console.error('Failed to fetch connections:', connectionsError);
+      return res.status(500).json({ error: 'Failed to fetch connections' });
+    }
+
+    // Validate group size limit
+    const validation = validateConnectionGroupSize(
+      playerId,
+      connectedToId,
+      existingConnections || [],
+      group.sport
+    );
+
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: validation.error,
+        groupSize: validation.groupSize,
+        limit: validation.limit
+      });
     }
 
     // Create connection
