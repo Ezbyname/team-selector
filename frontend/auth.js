@@ -505,10 +505,23 @@ function setLoading(screenId, isLoading) {
 
   const button = screen.querySelector('button[type="submit"], .primary-btn');
   if (button) {
-    button.disabled = isLoading;
-    button.textContent = isLoading ? 'Loading...' : button.dataset.originalText || button.textContent;
-    if (!button.dataset.originalText) {
+    // Save original text BEFORE changing it
+    if (!button.dataset.originalText && !isLoading) {
+      // If we're clearing loading and originalText is missing, don't restore
+      button.disabled = false;
+      return;
+    }
+
+    if (isLoading && !button.dataset.originalText) {
       button.dataset.originalText = button.textContent;
+    }
+
+    button.disabled = isLoading;
+    button.textContent = isLoading ? 'Loading...' : button.dataset.originalText;
+
+    // Clear saved text after restoring
+    if (!isLoading) {
+      delete button.dataset.originalText;
     }
   }
 
