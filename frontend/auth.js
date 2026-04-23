@@ -76,10 +76,18 @@ function updatePhonePlaceholder() {
   const countrySelect = document.getElementById('countrySelect');
   const phoneInput = document.getElementById('phoneInput');
   const phoneHint = document.getElementById('phoneHint');
+  const countryFlagDisplay = document.getElementById('countryFlagDisplay');
 
   if (!countrySelect || !phoneInput) return;
 
   const country = countrySelect.value;
+  const selectedOption = countrySelect.options[countrySelect.selectedIndex];
+  const flag = selectedOption.getAttribute('data-flag') || '🏳️';
+
+  // Update flag display next to input
+  if (countryFlagDisplay) {
+    countryFlagDisplay.textContent = `${flag} ${country}`;
+  }
 
   // Country-specific placeholders and hints
   const countryInfo = {

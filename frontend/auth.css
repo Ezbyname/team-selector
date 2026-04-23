@@ -93,35 +93,58 @@
   cursor: not-allowed;
 }
 
-.phone-input-wrapper {
-  display: flex;
-  gap: 8px;
+.country-selector-wrapper {
+  margin-bottom: 12px;
 }
 
-.country-select {
-  padding: 12px 8px;
+.country-select-dropdown {
+  width: 100%;
+  padding: 12px 16px;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
   font-size: 16px;
   background: white;
   cursor: pointer;
   transition: border-color 0.2s;
-  min-width: 100px;
 }
 
-.country-select:focus {
+.country-select-dropdown:focus {
   outline: none;
   border-color: #667eea;
 }
 
+.phone-input-wrapper {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+}
+
+.country-flag-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  background: #f5f5f5;
+  border: 2px solid #e0e0e0;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  min-width: 100px;
+  white-space: nowrap;
+}
+
 .phone-input-wrapper input {
   flex: 1;
+  border-radius: 0 8px 8px 0 !important;
+  border-left: none !important;
 }
 
 .input-hint {
   font-size: 12px;
   color: #999;
-  margin-top: -4px;
+  margin-top: 4px;
 }
 
 .password-wrapper {
