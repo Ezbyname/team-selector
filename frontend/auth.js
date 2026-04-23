@@ -38,9 +38,19 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initAuth() {
   // Setup country selector listener
   const countrySelect = document.getElementById('countrySelect');
+  const countryFlagButton = document.getElementById('countryFlagButton');
+
   if (countrySelect) {
     countrySelect.addEventListener('change', updatePhonePlaceholder);
     updatePhonePlaceholder(); // Set initial placeholder
+  }
+
+  // Click flag button to open country selector
+  if (countryFlagButton && countrySelect) {
+    countryFlagButton.addEventListener('click', () => {
+      countrySelect.focus();
+      countrySelect.click();
+    });
   }
 
   // Check if user is already authenticated
@@ -76,7 +86,8 @@ function updatePhonePlaceholder() {
   const countrySelect = document.getElementById('countrySelect');
   const phoneInput = document.getElementById('phoneInput');
   const phoneHint = document.getElementById('phoneHint');
-  const countryFlagDisplay = document.getElementById('countryFlagDisplay');
+  const countryCodePrefix = document.getElementById('countryCodePrefix');
+  const countryFlagButton = document.getElementById('countryFlagButton');
 
   if (!countrySelect || !phoneInput) return;
 
@@ -84,9 +95,14 @@ function updatePhonePlaceholder() {
   const selectedOption = countrySelect.options[countrySelect.selectedIndex];
   const flag = selectedOption.getAttribute('data-flag') || '🏳️';
 
-  // Update flag display next to input
-  if (countryFlagDisplay) {
-    countryFlagDisplay.textContent = `${flag} ${country}`;
+  // Update country code prefix (left side)
+  if (countryCodePrefix) {
+    countryCodePrefix.textContent = country; // e.g., +972
+  }
+
+  // Update flag button (right side)
+  if (countryFlagButton) {
+    countryFlagButton.textContent = flag; // e.g., 🇮🇱
   }
 
   // Country-specific placeholders and hints

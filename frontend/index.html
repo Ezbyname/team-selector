@@ -57,8 +57,8 @@
                             </select>
                         </div>
                         <div class="phone-input-wrapper">
-                            <div class="country-flag-display" id="countryFlagDisplay">
-                                🇮🇱 +972
+                            <div class="country-code-prefix" id="countryCodePrefix">
+                                +972
                             </div>
                             <input
                                 type="tel"
@@ -69,6 +69,9 @@
                                 pattern="[0-9]*"
                                 required
                             />
+                            <button type="button" class="country-flag-button" id="countryFlagButton">
+                                🇮🇱
+                            </button>
                         </div>
                         <small class="input-hint" id="phoneHint">10 digits (e.g., 0501234567)</small>
                     </div>
