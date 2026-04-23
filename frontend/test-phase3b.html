@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phase 3B Demo</title>
+  <link rel="stylesheet" href="playful-styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <button class="back-btn" onclick="alert('Back button clicked')">
+        <span class="flip-icon">←</span>
+        <span id="backText">Back</span>
+      </button>
+
+      <button class="language-toggle" onclick="alert('Language toggle clicked')">
+        <span id="langToggleText">עב</span>
+      </button>
+
+      <h1>
+        <span class="sport-icon" id="sportIcon">🏀</span>
+        <span id="headerTitle">Phase 3B Demo</span>
+      </h1>
+    </header>
+
+    <!-- Action Buttons -->
+    <div class="btn-group">
+      <button class="btn btn-primary" style="flex: 1.5;">
+        <span style="font-size: 20px;">+</span>
+        <span>Add Player</span>
+      </button>
+      <button class="btn btn-secondary" style="flex: 1;">
+        <span style="font-size: 18px;">🔗</span>
+        <span>Friends</span>
+      </button>
+    </div>
+
+    <!-- Demo Player Cards -->
+    <div class="player-card selected">
+      <div class="checkbox"></div>
+      <div class="player-avatar basketball">J</div>
+      <div class="player-info">
+        <div class="player-name">John Doe</div>
+        <div class="player-position">Guard</div>
+        <div class="player-connections">Friends: Jane, Mike</div>
+      </div>
+      <button class="connection-badge basketball">🔗 2</button>
+      <button class="action-menu-btn">⋮</button>
+    </div>
+
+    <div class="player-card">
+      <div class="checkbox"></div>
+      <div class="player-avatar basketball">J</div>
+      <div class="player-info">
+        <div class="player-name">Jane Smith</div>
+        <div class="player-position">Forward</div>
+        <div class="player-connections">Friends: John</div>
+      </div>
+      <button class="connection-badge basketball">🔗 1</button>
+      <button class="action-menu-btn">⋮</button>
+    </div>
+
+    <div class="player-card">
+      <div class="checkbox"></div>
+      <div class="player-avatar basketball">M</div>
+      <div class="player-info">
+        <div class="player-name">Mike Johnson</div>
+        <div class="player-position">Center</div>
+      </div>
+      <button class="action-menu-btn">⋮</button>
+    </div>
+
+    <!-- Status Display -->
+    <div class="status-display">
+      <div class="status-count">
+        <span>2</span>
+        <span>players ready!</span>
+        <span>🎉</span>
+      </div>
+      <div class="status-info">Teams: 1v1</div>
+    </div>
+
+    <!-- Generate Button -->
+    <button class="btn btn-success btn-block">
+      <span style="font-size: 22px;">⚡</span>
+      <span>Create Teams</span>
+    </button>
+
+    <!-- Demo Section: Football -->
+    <div style="margin-top: 40px; padding-top: 40px; border-top: 2px solid var(--border-light);">
+      <h2 style="text-align: center; margin-bottom: 20px;">⚽ Football Example</h2>
+
+      <div class="player-card">
+        <div class="checkbox"></div>
+        <div class="player-avatar football">T</div>
+        <div class="player-info">
+          <div class="player-name">Tom Wilson</div>
+          <div class="player-position">Goalkeeper</div>
+        </div>
+        <button class="connection-badge football">🔗 1</button>
+        <button class="action-menu-btn">⋮</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</body>
+</html>

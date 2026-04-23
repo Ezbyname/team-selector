@@ -26,13 +26,22 @@
                 <form class="auth-form" onsubmit="event.preventDefault(); auth.sendOTP();">
                     <div class="form-group">
                         <label for="phoneInput">Phone Number</label>
-                        <input
-                            type="tel"
-                            id="phoneInput"
-                            placeholder="050-123-4567"
-                            autocomplete="tel"
-                            required
-                        />
+                        <div class="phone-input-wrapper">
+                            <select id="countrySelect" class="country-select">
+                                <option value="+972" data-flag="🇮🇱">🇮🇱 +972</option>
+                                <option value="+1" data-flag="🇺🇸">🇺🇸 +1</option>
+                            </select>
+                            <input
+                                type="tel"
+                                id="phoneInput"
+                                placeholder="501234567"
+                                autocomplete="tel"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
+                                required
+                            />
+                        </div>
+                        <small class="input-hint" id="phoneHint">10 digits (e.g., 0501234567)</small>
                     </div>
 
                     <button type="submit" class="primary-btn">Send Code</button>

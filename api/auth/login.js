@@ -13,15 +13,22 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { phone, password } = req.body;
+  const { phone, password, countryCode } = req.body;
 
   // Validate input
   if (!phone || !password) {
     return res.status(400).json({ error: 'Phone and password are required' });
   }
 
+  // Validate country code
+  const validCountryCodes = ['+972', '+1'];
+  const selectedCountryCode = countryCode || '+972';
+  if (!validCountryCodes.includes(selectedCountryCode)) {
+    return res.status(400).json({ error: 'Invalid country code' });
+  }
+
   // Normalize phone
-  const phoneNormalized = normalizePhone(phone);
+  const phoneNormalized = normalizePhone(phone, selectedCountryCode);
   if (!phoneNormalized) {
     return res.status(400).json({ error: 'Invalid phone number' });
   }

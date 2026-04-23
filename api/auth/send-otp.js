@@ -17,16 +17,27 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { phone } = req.body;
+  const { phone, countryCode } = req.body;
 
   // Validate input
   if (!phone) {
     return res.status(400).json({ error: 'Phone number is required' });
   }
 
-  // Normalize phone
-  const phoneNormalized = normalizePhone(phone);
+  // Validate country code
+  const validCountryCodes = ['+972', '+1'];
+  if (!countryCode || !validCountryCodes.includes(countryCode)) {
+    return res.status(400).json({ error: 'Invalid country code' });
+  }
+
+  // Normalize phone with country code
+  const phoneNormalized = normalizePhone(phone, countryCode);
   if (!phoneNormalized) {
+    if (countryCode === '+972') {
+      return res.status(400).json({ error: 'Invalid Israeli phone number. Must be 10 digits starting with 05' });
+    } else if (countryCode === '+1') {
+      return res.status(400).json({ error: 'Invalid US phone number. Must be 10 digits' });
+    }
     return res.status(400).json({ error: 'Invalid phone number format' });
   }
 

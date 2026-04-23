@@ -93,6 +93,37 @@
   cursor: not-allowed;
 }
 
+.phone-input-wrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.country-select {
+  padding: 12px 8px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  min-width: 100px;
+}
+
+.country-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.phone-input-wrapper input {
+  flex: 1;
+}
+
+.input-hint {
+  font-size: 12px;
+  color: #999;
+  margin-top: -4px;
+}
+
 .password-wrapper {
   position: relative;
 }

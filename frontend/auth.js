@@ -36,6 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
  * Check for existing session and setup token refresh
  */
 async function initAuth() {
+  // Setup country selector listener
+  const countrySelect = document.getElementById('countrySelect');
+  if (countrySelect) {
+    countrySelect.addEventListener('change', updatePhonePlaceholder);
+    updatePhonePlaceholder(); // Set initial placeholder
+  }
+
   // Check if user is already authenticated
   const savedToken = localStorage.getItem('accessToken');
   const savedUser = localStorage.getItem('user');
@@ -60,6 +67,30 @@ async function initAuth() {
     // No existing session, show auth screen
     showAuthScreen('phone');
   }
+}
+
+/**
+ * Update phone input placeholder based on selected country
+ */
+function updatePhonePlaceholder() {
+  const countrySelect = document.getElementById('countrySelect');
+  const phoneInput = document.getElementById('phoneInput');
+  const phoneHint = document.getElementById('phoneHint');
+
+  if (!countrySelect || !phoneInput) return;
+
+  const country = countrySelect.value;
+
+  if (country === '+972') {
+    phoneInput.placeholder = '501234567';
+    if (phoneHint) phoneHint.textContent = '10 digits (e.g., 0501234567)';
+  } else if (country === '+1') {
+    phoneInput.placeholder = '2025551234';
+    if (phoneHint) phoneHint.textContent = '10 digits (e.g., 2025551234)';
+  }
+
+  // Clear input when country changes
+  phoneInput.value = '';
 }
 
 /**
@@ -135,10 +166,28 @@ function showMainApp() {
  */
 async function sendOTP() {
   const phoneInput = document.getElementById('phoneInput');
+  const countrySelect = document.getElementById('countrySelect');
   const phone = phoneInput.value.trim();
+  const countryCode = countrySelect ? countrySelect.value : '+972';
 
   if (!phone) {
     showError('phoneScreen', 'Please enter phone number');
+    return;
+  }
+
+  // Validate digits only
+  if (!/^\d+$/.test(phone)) {
+    showError('phoneScreen', 'Phone number must contain only digits (no dashes or spaces)');
+    return;
+  }
+
+  // Validate length
+  if (phone.length !== 10 && phone.length !== 9) {
+    if (countryCode === '+972') {
+      showError('phoneScreen', 'Israeli phone must be 10 digits (e.g., 0501234567)');
+    } else {
+      showError('phoneScreen', 'US phone must be 10 digits (e.g., 2025551234)');
+    }
     return;
   }
 
@@ -149,7 +198,7 @@ async function sendOTP() {
     const response = await fetch(`${API_BASE_URL}/send-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone })
+      body: JSON.stringify({ phone, countryCode })
     });
 
     const data = await response.json();
@@ -200,12 +249,16 @@ async function verifyOTP() {
   clearError('otpScreen');
 
   try {
+    const countrySelect = document.getElementById('countrySelect');
+    const countryCode = countrySelect ? countrySelect.value : '+972';
+
     const response = await fetch(`${API_BASE_URL}/verify-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         phone: authState.phone,
-        code: otpCode
+        code: otpCode,
+        countryCode
       })
     });
 
@@ -284,6 +337,9 @@ async function registerUser() {
   clearError('registerScreen');
 
   try {
+    const countrySelect = document.getElementById('countrySelect');
+    const countryCode = countrySelect ? countrySelect.value : '+972';
+
     const response = await fetch(`${API_BASE_URL}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -291,7 +347,8 @@ async function registerUser() {
       body: JSON.stringify({
         phone: authState.phone,
         password,
-        displayName
+        displayName,
+        countryCode
       })
     });
 
@@ -336,13 +393,17 @@ async function loginUser() {
   clearError('loginScreen');
 
   try {
+    const countrySelect = document.getElementById('countrySelect');
+    const countryCode = countrySelect ? countrySelect.value : '+972';
+
     const response = await fetch(`${API_BASE_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include', // Important for cookies
       body: JSON.stringify({
         phone: authState.phone,
-        password
+        password,
+        countryCode
       })
     });
 
