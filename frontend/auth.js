@@ -81,13 +81,36 @@ function updatePhonePlaceholder() {
 
   const country = countrySelect.value;
 
-  if (country === '+972') {
-    phoneInput.placeholder = '501234567';
-    if (phoneHint) phoneHint.textContent = '10 digits (e.g., 0501234567)';
-  } else if (country === '+1') {
-    phoneInput.placeholder = '2025551234';
-    if (phoneHint) phoneHint.textContent = '10 digits (e.g., 2025551234)';
-  }
+  // Country-specific placeholders and hints
+  const countryInfo = {
+    '+972': { placeholder: '501234567', hint: '10 digits (e.g., 0501234567)' },
+    '+1': { placeholder: '2025551234', hint: '10 digits (e.g., 2025551234)' },
+    '+44': { placeholder: '7400123456', hint: '10 digits (e.g., 07400123456)' },
+    '+49': { placeholder: '1512345678', hint: '10-11 digits' },
+    '+33': { placeholder: '612345678', hint: '9 digits (e.g., 0612345678)' },
+    '+39': { placeholder: '3123456789', hint: '10 digits' },
+    '+34': { placeholder: '612345678', hint: '9 digits' },
+    '+31': { placeholder: '612345678', hint: '9 digits (e.g., 0612345678)' },
+    '+32': { placeholder: '471234567', hint: '9 digits (e.g., 0471234567)' },
+    '+41': { placeholder: '791234567', hint: '9 digits (e.g., 0791234567)' },
+    '+43': { placeholder: '6641234567', hint: '10-11 digits (e.g., 06641234567)' },
+    '+45': { placeholder: '12345678', hint: '8 digits' },
+    '+46': { placeholder: '701234567', hint: '9 digits (e.g., 0701234567)' },
+    '+47': { placeholder: '40612345', hint: '8 digits' },
+    '+48': { placeholder: '501234567', hint: '9 digits' },
+    '+61': { placeholder: '412345678', hint: '9 digits (e.g., 0412345678)' },
+    '+81': { placeholder: '9012345678', hint: '10 digits (e.g., 09012345678)' },
+    '+82': { placeholder: '1012345678', hint: '9-10 digits (e.g., 01012345678)' },
+    '+86': { placeholder: '13812345678', hint: '11 digits' },
+    '+91': { placeholder: '9876543210', hint: '10 digits' },
+    '+351': { placeholder: '912345678', hint: '9 digits' },
+    '+358': { placeholder: '412345678', hint: '9 digits (e.g., 0412345678)' },
+    '+7': { placeholder: '9161234567', hint: '10 digits' },
+  };
+
+  const info = countryInfo[country] || { placeholder: '123456789', hint: 'Enter phone number' };
+  phoneInput.placeholder = info.placeholder;
+  if (phoneHint) phoneHint.textContent = info.hint;
 
   // Clear input when country changes
   phoneInput.value = '';
@@ -181,13 +204,9 @@ async function sendOTP() {
     return;
   }
 
-  // Validate length
-  if (phone.length !== 10 && phone.length !== 9) {
-    if (countryCode === '+972') {
-      showError('phoneScreen', 'Israeli phone must be 10 digits (e.g., 0501234567)');
-    } else {
-      showError('phoneScreen', 'US phone must be 10 digits (e.g., 2025551234)');
-    }
+  // Validate minimum length (most countries are 8-11 digits)
+  if (phone.length < 8 || phone.length > 12) {
+    showError('phoneScreen', 'Phone number must be between 8 and 12 digits');
     return;
   }
 

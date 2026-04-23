@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   }
 
   // Validate country code
-  const validCountryCodes = ['+972', '+1'];
+  const validCountryCodes = ['+972', '+1', '+44', '+49', '+33', '+39', '+34', '+31', '+32', '+41', '+43', '+45', '+46', '+47', '+48', '+61', '+81', '+82', '+86', '+91', '+351', '+358', '+7'];
   const selectedCountryCode = countryCode || '+972';
   if (!validCountryCodes.includes(selectedCountryCode)) {
     return res.status(400).json({ error: 'Invalid country code' });

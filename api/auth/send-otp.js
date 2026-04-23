@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   }
 
   // Validate country code
-  const validCountryCodes = ['+972', '+1'];
+  const validCountryCodes = ['+972', '+1', '+44', '+49', '+33', '+39', '+34', '+31', '+32', '+41', '+43', '+45', '+46', '+47', '+48', '+61', '+81', '+82', '+86', '+91', '+351', '+358', '+7'];
   if (!countryCode || !validCountryCodes.includes(countryCode)) {
     return res.status(400).json({ error: 'Invalid country code' });
   }
@@ -33,12 +33,7 @@ export default async function handler(req, res) {
   // Normalize phone with country code
   const phoneNormalized = normalizePhone(phone, countryCode);
   if (!phoneNormalized) {
-    if (countryCode === '+972') {
-      return res.status(400).json({ error: 'Invalid Israeli phone number. Must be 10 digits starting with 05' });
-    } else if (countryCode === '+1') {
-      return res.status(400).json({ error: 'Invalid US phone number. Must be 10 digits' });
-    }
-    return res.status(400).json({ error: 'Invalid phone number format' });
+    return res.status(400).json({ error: 'Invalid phone number format for selected country' });
   }
 
   try {
