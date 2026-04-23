@@ -27,7 +27,7 @@
                     <div class="form-group">
                         <label for="phoneInput">Phone Number</label>
                         <div class="phone-input-container">
-                            <!-- Country Selector Button -->
+                            <!-- Country Selector (LEFT) -->
                             <div class="country-selector">
                                 <button type="button" class="country-button" id="countryButton">
                                     <span class="country-flag">🇮🇱</span>
@@ -36,41 +36,41 @@
                                 </button>
                                 <select id="countrySelect" class="country-dropdown">
                                     <!-- Favorites -->
-                                    <option value="+972" data-flag="🇮🇱" data-code="IL">🇮🇱 IL</option>
-                                    <option value="+1" data-flag="🇺🇸" data-code="US">🇺🇸 US</option>
+                                    <option value="+972" data-flag="🇮🇱" data-code="IL">IL</option>
+                                    <option value="+1" data-flag="🇺🇸" data-code="US">US</option>
                                     <option disabled>──────────</option>
                                     <!-- Alphabetical -->
-                                    <option value="+43" data-flag="🇦🇹" data-code="AT">🇦🇹 AT</option>
-                                    <option value="+61" data-flag="🇦🇺" data-code="AU">🇦🇺 AU</option>
-                                    <option value="+32" data-flag="🇧🇪" data-code="BE">🇧🇪 BE</option>
-                                    <option value="+86" data-flag="🇨🇳" data-code="CN">🇨🇳 CN</option>
-                                    <option value="+45" data-flag="🇩🇰" data-code="DK">🇩🇰 DK</option>
-                                    <option value="+358" data-flag="🇫🇮" data-code="FI">🇫🇮 FI</option>
-                                    <option value="+33" data-flag="🇫🇷" data-code="FR">🇫🇷 FR</option>
-                                    <option value="+49" data-flag="🇩🇪" data-code="DE">🇩🇪 DE</option>
-                                    <option value="+91" data-flag="🇮🇳" data-code="IN">🇮🇳 IN</option>
-                                    <option value="+39" data-flag="🇮🇹" data-code="IT">🇮🇹 IT</option>
-                                    <option value="+81" data-flag="🇯🇵" data-code="JP">🇯🇵 JP</option>
-                                    <option value="+31" data-flag="🇳🇱" data-code="NL">🇳🇱 NL</option>
-                                    <option value="+47" data-flag="🇳🇴" data-code="NO">🇳🇴 NO</option>
-                                    <option value="+48" data-flag="🇵🇱" data-code="PL">🇵🇱 PL</option>
-                                    <option value="+351" data-flag="🇵🇹" data-code="PT">🇵🇹 PT</option>
-                                    <option value="+7" data-flag="🇷🇺" data-code="RU">🇷🇺 RU</option>
-                                    <option value="+82" data-flag="🇰🇷" data-code="KR">🇰🇷 KR</option>
-                                    <option value="+34" data-flag="🇪🇸" data-code="ES">🇪🇸 ES</option>
-                                    <option value="+46" data-flag="🇸🇪" data-code="SE">🇸🇪 SE</option>
-                                    <option value="+41" data-flag="🇨🇭" data-code="CH">🇨🇭 CH</option>
-                                    <option value="+44" data-flag="🇬🇧" data-code="GB">🇬🇧 GB</option>
+                                    <option value="+43" data-flag="🇦🇹" data-code="AT">AT</option>
+                                    <option value="+61" data-flag="🇦🇺" data-code="AU">AU</option>
+                                    <option value="+32" data-flag="🇧🇪" data-code="BE">BE</option>
+                                    <option value="+86" data-flag="🇨🇳" data-code="CN">CN</option>
+                                    <option value="+45" data-flag="🇩🇰" data-code="DK">DK</option>
+                                    <option value="+358" data-flag="🇫🇮" data-code="FI">FI</option>
+                                    <option value="+33" data-flag="🇫🇷" data-code="FR">FR</option>
+                                    <option value="+49" data-flag="🇩🇪" data-code="DE">DE</option>
+                                    <option value="+91" data-flag="🇮🇳" data-code="IN">IN</option>
+                                    <option value="+39" data-flag="🇮🇹" data-code="IT">IT</option>
+                                    <option value="+81" data-flag="🇯🇵" data-code="JP">JP</option>
+                                    <option value="+31" data-flag="🇳🇱" data-code="NL">NL</option>
+                                    <option value="+47" data-flag="🇳🇴" data-code="NO">NO</option>
+                                    <option value="+48" data-flag="🇵🇱" data-code="PL">PL</option>
+                                    <option value="+351" data-flag="🇵🇹" data-code="PT">PT</option>
+                                    <option value="+7" data-flag="🇷🇺" data-code="RU">RU</option>
+                                    <option value="+82" data-flag="🇰🇷" data-code="KR">KR</option>
+                                    <option value="+34" data-flag="🇪🇸" data-code="ES">ES</option>
+                                    <option value="+46" data-flag="🇸🇪" data-code="SE">SE</option>
+                                    <option value="+41" data-flag="🇨🇭" data-code="CH">CH</option>
+                                    <option value="+44" data-flag="🇬🇧" data-code="GB">GB</option>
                                 </select>
                             </div>
 
-                            <!-- Phone Input with Prefix -->
+                            <!-- Phone Input (RIGHT) -->
                             <div class="phone-field">
                                 <span class="phone-prefix" id="phonePrefix">+972</span>
                                 <input
                                     type="tel"
                                     id="phoneInput"
-                                    placeholder="501234567"
+                                    placeholder="Enter phone number"
                                     autocomplete="tel"
                                     inputmode="numeric"
                                     pattern="[0-9]*"
@@ -78,7 +78,7 @@
                                 />
                             </div>
                         </div>
-                        <small class="input-hint" id="phoneHint">Enter 10 digits</small>
+                        <small class="input-hint" id="phoneHint">We'll send a verification code via SMS</small>
                     </div>
 
                     <button type="submit" class="primary-btn">Send Code</button>

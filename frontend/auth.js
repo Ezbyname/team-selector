@@ -85,7 +85,6 @@ async function initAuth() {
 function updateCountryDisplay() {
   const countrySelect = document.getElementById('countrySelect');
   const phoneInput = document.getElementById('phoneInput');
-  const phoneHint = document.getElementById('phoneHint');
   const phonePrefix = document.getElementById('phonePrefix');
   const countryButton = document.getElementById('countryButton');
 
@@ -96,7 +95,7 @@ function updateCountryDisplay() {
   const flag = selectedOption.getAttribute('data-flag') || '🏳️';
   const code = selectedOption.getAttribute('data-code') || 'XX';
 
-  // Update country button display
+  // Update country button display (flag + code)
   if (countryButton) {
     const flagSpan = countryButton.querySelector('.country-flag');
     const codeSpan = countryButton.querySelector('.country-code');
@@ -104,41 +103,10 @@ function updateCountryDisplay() {
     if (codeSpan) codeSpan.textContent = code;
   }
 
-  // Update phone prefix
+  // Update phone prefix inside input
   if (phonePrefix) {
     phonePrefix.textContent = countryCode; // e.g., +972
   }
-
-  // Country-specific placeholders and hints
-  const countryInfo = {
-    '+972': { placeholder: '501234567', hint: 'Enter 10 digits' },
-    '+1': { placeholder: '2025551234', hint: 'Enter 10 digits' },
-    '+44': { placeholder: '7400123456', hint: 'Enter 10 digits' },
-    '+49': { placeholder: '1512345678', hint: 'Enter 10-11 digits' },
-    '+33': { placeholder: '612345678', hint: 'Enter 9 digits' },
-    '+39': { placeholder: '3123456789', hint: 'Enter 10 digits' },
-    '+34': { placeholder: '612345678', hint: 'Enter 9 digits' },
-    '+31': { placeholder: '612345678', hint: 'Enter 9 digits' },
-    '+32': { placeholder: '471234567', hint: 'Enter 9 digits' },
-    '+41': { placeholder: '791234567', hint: 'Enter 9 digits' },
-    '+43': { placeholder: '6641234567', hint: 'Enter 10-11 digits' },
-    '+45': { placeholder: '12345678', hint: 'Enter 8 digits' },
-    '+46': { placeholder: '701234567', hint: 'Enter 9 digits' },
-    '+47': { placeholder: '40612345', hint: 'Enter 8 digits' },
-    '+48': { placeholder: '501234567', hint: 'Enter 9 digits' },
-    '+61': { placeholder: '412345678', hint: 'Enter 9 digits' },
-    '+81': { placeholder: '9012345678', hint: 'Enter 10 digits' },
-    '+82': { placeholder: '1012345678', hint: 'Enter 9-10 digits' },
-    '+86': { placeholder: '13812345678', hint: 'Enter 11 digits' },
-    '+91': { placeholder: '9876543210', hint: 'Enter 10 digits' },
-    '+351': { placeholder: '912345678', hint: 'Enter 9 digits' },
-    '+358': { placeholder: '412345678', hint: 'Enter 9 digits' },
-    '+7': { placeholder: '9161234567', hint: 'Enter 10 digits' },
-  };
-
-  const info = countryInfo[countryCode] || { placeholder: '123456789', hint: 'Enter phone number' };
-  phoneInput.placeholder = info.placeholder;
-  if (phoneHint) phoneHint.textContent = info.hint;
 
   // Clear input when country changes
   phoneInput.value = '';
