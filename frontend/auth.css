@@ -134,6 +134,17 @@
   color: #333;
   min-width: 70px;
   white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.country-code-prefix:hover {
+  background: #e8e8e8;
+}
+
+.country-code-prefix:focus {
+  outline: none;
+  background: #ddd;
 }
 
 .phone-input-wrapper input {

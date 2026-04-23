@@ -39,6 +39,7 @@ async function initAuth() {
   // Setup country selector listener
   const countrySelect = document.getElementById('countrySelect');
   const countryFlagButton = document.getElementById('countryFlagButton');
+  const countryCodePrefix = document.getElementById('countryCodePrefix');
 
   if (countrySelect) {
     countrySelect.addEventListener('change', updatePhonePlaceholder);
@@ -48,6 +49,14 @@ async function initAuth() {
   // Click flag button to open country selector
   if (countryFlagButton && countrySelect) {
     countryFlagButton.addEventListener('click', () => {
+      countrySelect.focus();
+      countrySelect.click();
+    });
+  }
+
+  // Click country code prefix to open country selector
+  if (countryCodePrefix && countrySelect) {
+    countryCodePrefix.addEventListener('click', () => {
       countrySelect.focus();
       countrySelect.click();
     });
