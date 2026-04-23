@@ -58,8 +58,7 @@ async function handler(req, res) {
             defaultRating: player.default_rating,
             finalRating: finalRating || player.default_rating,
             graderCount: ratings?.length || 0,
-            grades: ratings?.map(r => r.grade) || [],
-            isStar: player.is_star || false
+            grades: ratings?.map(r => r.grade) || []
           };
         }
 

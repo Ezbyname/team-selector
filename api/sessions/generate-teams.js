@@ -71,8 +71,7 @@ async function handler(req, res) {
       name: p.player_name,
       position: p.player_position || 'No Position',
       defaultRating: p.default_rating || 5,
-      finalRating: (p.grader_count > 0) ? p.final_rating : p.default_rating,
-      isStar: p.is_star || false
+      finalRating: (p.grader_count > 0) ? p.final_rating : p.default_rating
     }));
 
     // Format connections for balancing algorithm
@@ -110,8 +109,7 @@ async function handler(req, res) {
             return {
               ...baseData,
               defaultRating: p.defaultRating,
-              finalRating: p.finalRating,
-              isStar: p.isStar
+              finalRating: p.finalRating
             };
           }
 
@@ -119,8 +117,7 @@ async function handler(req, res) {
         }),
         // Only include team stats for admin/sub-admin
         ...(canSeeSensitiveData && {
-          totalRating: team.totalRating,
-          starCount: team.starCount
+          totalRating: team.totalRating
         }),
         positionBreakdown: team.positionBreakdown
       })),
@@ -144,7 +141,6 @@ async function handler(req, res) {
       ...(canSeeSensitiveData && {
         balance: {
           ratingDifference: result.balance.ratingDifference,
-          starDifference: result.balance.starDifference,
           positionImbalancePenalty: result.balance.positionImbalancePenalty,
           teamSizeDifference: result.balance.teamSizeDifference,
           totalScore: result.balance.totalScore,
