@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Groups - Team Selector</title>
+  <link rel="stylesheet" href="playful-styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>
+        <span style="font-size: 28px;">🏀⚽</span>
+        <span>My Groups</span>
+      </h1>
+    </header>
+
+    <button class="btn btn-primary btn-block mb-lg" onclick="openCreateGroupModal()">
+      <span style="font-size: 20px;">+</span>
+      <span>Create New Group</span>
+    </button>
+
+    <div id="groupsList"></div>
+  </div>
+
+  <!-- Create Group Modal -->
+  <div class="modal-overlay hidden" id="createGroupModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Create New Group</h2>
+        <button class="modal-close" onclick="closeCreateGroupModal()">×</button>
+      </div>
+
+      <form id="createGroupForm" onsubmit="handleCreateGroup(event)">
+        <div class="form-group">
+          <label class="form-label">Group Name *</label>
+          <input type="text" class="form-input" id="groupName" required placeholder="Wednesday Night" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Sport *</label>
+          <select class="form-select" id="groupSport" required>
+            <option value="basketball">🏀 Basketball</option>
+            <option value="football">⚽ Football</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <input type="text" class="form-input" id="groupLocation" placeholder="Central Park" />
+        </div>
+
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary" onclick="closeCreateGroupModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Group</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getToken } from './lib/auth.js';
+
+    const API_BASE = window.location.origin;
+    const token = getToken();
+
+    if (!token) {
+      window.location.href = '/login.html';
+    }
+
+    // Load groups on page load
+    window.addEventListener('DOMContentLoaded', loadGroups);
+
+    async function loadGroups() {
+      try {
+        const response = await fetch(`${API_BASE}/api/groups/list`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        renderGroups(data.groups || []);
+      } catch (error) {
+        console.error('Failed to load groups:', error);
+        showToast('Failed to load groups', 'error');
+      }
+    }
+
+    function renderGroups(groups) {
+      const container = document.getElementById('groupsList');
+
+      if (groups.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🏀⚽</div>
+            <div class="empty-state-text">
+              No groups yet.<br>Create your first group to get started!
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = groups.map(group => {
+        const sportIcon = group.sport === 'basketball' ? '🏀' : '⚽';
+        const sportColor = group.sport === 'basketball' ? 'basketball' : 'football';
+
+        return `
+          <div class="card interactive" onclick="selectGroup('${group.id}')">
+            <div style="display: flex; align-items: center; gap: var(--space-md);">
+              <div class="player-avatar ${sportColor}" style="font-size: 24px; width: 56px; height: 56px;">
+                ${sportIcon}
+              </div>
+              <div style="flex: 1;">
+                <div class="player-name">${group.name}</div>
+                <div class="player-position">${group.location || 'No location'}</div>
+              </div>
+              <div style="text-align: right;">
+                <div class="player-name">${group.playerCount || 0}</div>
+                <div class="player-position">players</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.selectGroup = function(groupId) {
+      window.location.href = `/session-setup.html?groupId=${groupId}`;
+    };
+
+    window.openCreateGroupModal = function() {
+      document.getElementById('createGroupModal').classList.remove('hidden');
+      document.getElementById('groupName').focus();
+    };
+
+    window.closeCreateGroupModal = function() {
+      document.getElementById('createGroupModal').classList.add('hidden');
+      document.getElementById('createGroupForm').reset();
+    };
+
+    window.handleCreateGroup = async function(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('groupName').value.trim();
+      const sport = document.getElementById('groupSport').value;
+      const location = document.getElementById('groupLocation').value.trim();
+
+      try {
+        const response = await fetch(`${API_BASE}/api/groups/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ name, sport, location: location || null })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to create group');
+        }
+
+        const data = await response.json();
+        closeCreateGroupModal();
+        showToast('Group created!', 'success');
+
+        // Navigate to session setup
+        window.location.href = `/session-setup.html?groupId=${data.group.id}`;
+      } catch (error) {
+        console.error('Create group error:', error);
+        showToast(error.message, 'error');
+      }
+    };
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

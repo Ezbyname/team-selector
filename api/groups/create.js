@@ -19,9 +19,12 @@ async function handler(req, res) {
     return res.status(400).json({ error: 'Group name is required' });
   }
 
-  if (!sport || !['basketball', 'soccer'].includes(sport)) {
-    return res.status(400).json({ error: 'Sport must be basketball or soccer' });
+  if (!sport || !['basketball', 'soccer', 'football'].includes(sport)) {
+    return res.status(400).json({ error: 'Sport must be basketball or football' });
   }
+
+  // Normalize 'football' to 'soccer' for database compatibility
+  const normalizedSport = sport === 'football' ? 'soccer' : sport;
 
   try {
     // Create in permanent_groups (for game_sessions FK)
@@ -29,7 +32,7 @@ async function handler(req, res) {
       .from('permanent_groups')
       .insert({
         name: name.trim(),
-        sport_type: sport, // Column name in permanent_groups is sport_type
+        sport_type: normalizedSport, // Use normalized sport (soccer)
         created_by: req.user.id
       })
       .select()
@@ -47,7 +50,7 @@ async function handler(req, res) {
         id: permGroup.id, // Use same ID
         name: name.trim(),
         location: location?.trim() || null,
-        sport: sport,
+        sport: normalizedSport, // Use normalized sport (soccer)
         created_by: req.user.id
       });
 

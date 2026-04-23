@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth Debug</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #00ff00;
+    }
+    .section {
+      background: #2a2a2a;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: 1px solid #00ff00;
+    }
+    .status {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .success {
+      background: #0a3a0a;
+      border: 1px solid #00ff00;
+    }
+    .error {
+      background: #3a0a0a;
+      border: 1px solid #ff0000;
+      color: #ff0000;
+    }
+    button {
+      background: #00ff00;
+      color: #1a1a1a;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #00cc00;
+    }
+    pre {
+      background: #000;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Auth Debug Tool</h1>
+
+  <div class="section">
+    <h2>Token Status</h2>
+    <div id="tokenStatus"></div>
+  </div>
+
+  <div class="section">
+    <h2>Token Validation</h2>
+    <button onclick="testToken()">Test Token</button>
+    <div id="validationResult"></div>
+  </div>
+
+  <div class="section">
+    <h2>API Test: Create Group</h2>
+    <button onclick="testCreateGroup()">Test Create Football Group</button>
+    <div id="createGroupResult"></div>
+  </div>
+
+  <div class="section">
+    <h2>Quick Actions</h2>
+    <button onclick="clearToken()">Clear Token</button>
+    <button onclick="window.location.href='/login.html'">Go to Login</button>
+    <button onclick="window.location.href='/groups.html'">Go to Groups</button>
+  </div>
+
+  <script type="module">
+    import { getToken, clearAuth } from './lib/auth.js';
+
+    const API_BASE = window.location.origin;
+
+    // Check token on load
+    window.addEventListener('DOMContentLoaded', checkTokenStatus);
+
+    function checkTokenStatus() {
+      const token = getToken();
+      const statusDiv = document.getElementById('tokenStatus');
+
+      if (!token) {
+        statusDiv.innerHTML = `
+          <div class="status error">
+            ❌ No token found in localStorage
+            <br><br>
+            <strong>Action:</strong> You need to login first
+            <br>
+            <button onclick="window.location.href='/login.html'">Go to Login</button>
+          </div>
+        `;
+        return;
+      }
+
+      // Decode JWT (without verification, just to see payload)
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+          throw new Error('Invalid JWT format');
+        }
+
+        const payload = JSON.parse(atob(parts[1]));
+        const now = Math.floor(Date.now() / 1000);
+        const isExpired = payload.exp && payload.exp < now;
+
+        statusDiv.innerHTML = `
+          <div class="status ${isExpired ? 'error' : 'success'}">
+            ${isExpired ? '❌' : '✅'} Token ${isExpired ? 'EXPIRED' : 'Found'}
+            <br><br>
+            <strong>User ID:</strong> ${payload.sub || 'unknown'}
+            <br>
+            <strong>Issued:</strong> ${payload.iat ? new Date(payload.iat * 1000).toLocaleString() : 'unknown'}
+            <br>
+            <strong>Expires:</strong> ${payload.exp ? new Date(payload.exp * 1000).toLocaleString() : 'unknown'}
+            <br>
+            <strong>Status:</strong> ${isExpired ? 'EXPIRED - Login again!' : 'Valid'}
+            <br><br>
+            <details>
+              <summary>Raw Token</summary>
+              <pre>${token}</pre>
+            </details>
+            <details>
+              <summary>Decoded Payload</summary>
+              <pre>${JSON.stringify(payload, null, 2)}</pre>
+            </details>
+          </div>
+        `;
+      } catch (error) {
+        statusDiv.innerHTML = `
+          <div class="status error">
+            ❌ Token exists but is invalid
+            <br><br>
+            <strong>Error:</strong> ${error.message}
+            <br>
+            <strong>Action:</strong> Clear token and login again
+          </div>
+        `;
+      }
+    }
+
+    window.testToken = async function() {
+      const resultDiv = document.getElementById('validationResult');
+      const token = getToken();
+
+      if (!token) {
+        resultDiv.innerHTML = `<div class="status error">❌ No token to test</div>`;
+        return;
+      }
+
+      resultDiv.innerHTML = `<div class="status">⏳ Testing token...</div>`;
+
+      try {
+        // Test with groups/list endpoint
+        const response = await fetch(`${API_BASE}/api/groups/list`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          resultDiv.innerHTML = `
+            <div class="status success">
+              ✅ Token is VALID
+              <br><br>
+              <strong>Response:</strong>
+              <pre>${JSON.stringify(data, null, 2)}</pre>
+            </div>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <div class="status error">
+              ❌ Token validation FAILED
+              <br><br>
+              <strong>Status:</strong> ${response.status}
+              <br>
+              <strong>Error:</strong> ${data.error || 'Unknown error'}
+              <br><br>
+              <strong>Action:</strong> ${data.error === 'Authentication required' ? 'Login again' : 'Check server logs'}
+            </div>
+          `;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="status error">
+            ❌ Network error
+            <br><br>
+            <strong>Error:</strong> ${error.message}
+            <br>
+            <strong>Action:</strong> Check if server is running
+          </div>
+        `;
+      }
+    };
+
+    window.testCreateGroup = async function() {
+      const resultDiv = document.getElementById('createGroupResult');
+      const token = getToken();
+
+      if (!token) {
+        resultDiv.innerHTML = `<div class="status error">❌ No token - login first</div>`;
+        return;
+      }
+
+      resultDiv.innerHTML = `<div class="status">⏳ Creating test football group...</div>`;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/groups/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name: 'Debug Test Football ' + Date.now(),
+            sport: 'football',
+            location: 'Debug Test Location'
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          resultDiv.innerHTML = `
+            <div class="status success">
+              ✅ Group created successfully!
+              <br><br>
+              <strong>Group ID:</strong> ${data.group?.id}
+              <br>
+              <strong>Name:</strong> ${data.group?.name}
+              <br>
+              <strong>Sport:</strong> ${data.group?.sport}
+              <br><br>
+              <strong>Full Response:</strong>
+              <pre>${JSON.stringify(data, null, 2)}</pre>
+            </div>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <div class="status error">
+              ❌ Create group FAILED
+              <br><br>
+              <strong>Status:</strong> ${response.status}
+              <br>
+              <strong>Error:</strong> ${data.error || 'Unknown error'}
+              <br><br>
+              <strong>Possible causes:</strong>
+              <ul>
+                <li>${response.status === 401 ? 'Token expired or invalid' : ''}</li>
+                <li>${response.status === 400 ? 'Invalid request data' : ''}</li>
+                <li>${response.status === 500 ? 'Server error - check logs' : ''}</li>
+              </ul>
+              <br>
+              <strong>Full Response:</strong>
+              <pre>${JSON.stringify(data, null, 2)}</pre>
+            </div>
+          `;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="status error">
+            ❌ Network error
+            <br><br>
+            <strong>Error:</strong> ${error.message}
+            <br>
+            <strong>Check:</strong>
+            <ul>
+              <li>Is server running?</li>
+              <li>Correct port (3000)?</li>
+              <li>CORS enabled?</li>
+            </ul>
+          </div>
+        `;
+      }
+    };
+
+    window.clearToken = function() {
+      if (confirm('Clear token and logout?')) {
+        clearAuth();
+        location.reload();
+      }
+    };
+  </script>
+</body>
+</html>

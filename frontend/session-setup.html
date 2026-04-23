@@ -4,276 +4,870 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Session Setup - Team Selector</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles-phase3b.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Session Setup</h1>
-      <button id="logout-btn" class="btn btn-secondary">Logout</button>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <button class="back-btn" onclick="goBack()">
+        <span class="flip-icon">←</span>
+        <span id="backText">Back</span>
+      </button>
+
+      <button class="language-toggle" onclick="toggleLanguage()">
+        <span id="langToggleText">עב</span>
+      </button>
+
+      <h1>
+        <span class="sport-icon" id="sportIcon">🏀</span>
+        <span id="headerTitle">Who's Playing Today?</span>
+      </h1>
     </header>
 
-    <main>
-      <!-- Step 1: Select Group -->
-      <section id="group-selection" class="card">
-        <h2>1. Select Group</h2>
-        <div id="groups-list" class="loading">Loading groups...</div>
-      </section>
+    <!-- Action Buttons -->
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="openAddPlayerModal()" style="flex: 1.5;">
+        <span style="font-size: 20px;">+</span>
+        <span id="addPlayerBtn">Add Player</span>
+      </button>
+      <button class="btn btn-secondary" onclick="openConnectionModal()" style="flex: 1;">
+        <span style="font-size: 18px;">🔗</span>
+        <span id="friendsBtn">Friends</span>
+      </button>
+    </div>
 
-      <!-- Step 2: Select Players (hidden until group selected) -->
-      <section id="player-selection" class="card hidden">
-        <h2>2. Select Players Present Today</h2>
-        <p class="subtitle">Check all players who are present for this session</p>
-        <div id="players-list"></div>
-      </section>
+    <!-- Players List -->
+    <div id="playersList"></div>
 
-      <!-- Step 3: Team Configuration (hidden until players selected) -->
-      <section id="team-config" class="card hidden">
-        <h2>3. Team Configuration</h2>
-        <div id="team-config-info" class="team-config-info"></div>
-        <button id="generate-btn" class="btn btn-primary btn-large" disabled>Generate Teams</button>
-      </section>
+    <!-- Status Display -->
+    <div class="status-display">
+      <div class="status-count" id="statusCount">
+        <span>0</span>
+        <span id="playersReadyText">players ready!</span>
+        <span>🎉</span>
+      </div>
+      <div class="status-info" id="teamSizeText"></div>
+    </div>
 
-      <div id="error-message" class="error-message hidden"></div>
-    </main>
+    <!-- Generate Button -->
+    <button class="btn btn-success btn-block" id="generateBtn" disabled onclick="generateTeams()">
+      <span style="font-size: 22px;">⚡</span>
+      <span id="createTeamsText">Create Teams</span>
+    </button>
+  </div>
+
+  <!-- Add Player Modal -->
+  <div class="modal-overlay hidden" id="addPlayerModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="addPlayerModalTitle">Add New Player</h2>
+        <button class="modal-close" onclick="closeAddPlayerModal()">×</button>
+      </div>
+
+      <form id="addPlayerForm" onsubmit="handleAddPlayer(event)">
+        <div class="form-group">
+          <label class="form-label" id="playerNameLabel">Player Name *</label>
+          <input type="text" class="form-input" id="playerName" required minlength="2" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" id="positionLabel">Position</label>
+          <select class="form-select" id="playerPosition">
+            <option value="" id="noPositionOption">No Position</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-checkbox-label">
+            <input type="checkbox" class="form-checkbox" id="includeInSession" checked />
+            <span id="includeInSessionLabel">Include in today's session</span>
+          </label>
+        </div>
+
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary" onclick="closeAddPlayerModal()" id="cancelBtn1">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="addPlayerSubmit">Add Player</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Player Modal -->
+  <div class="modal-overlay hidden" id="editPlayerModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="editPlayerModalTitle">Edit Player</h2>
+        <button class="modal-close" onclick="closeEditPlayerModal()">×</button>
+      </div>
+
+      <form id="editPlayerForm" onsubmit="handleEditPlayer(event)">
+        <div class="form-group">
+          <label class="form-label" id="editPlayerNameLabel">Player Name *</label>
+          <input type="text" class="form-input" id="editPlayerName" required minlength="2" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" id="editPositionLabel">Position</label>
+          <select class="form-select" id="editPlayerPosition">
+            <option value="" id="editNoPositionOption">No Position</option>
+          </select>
+        </div>
+
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary" onclick="closeEditPlayerModal()" id="cancelBtn2">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveChangesBtn">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Connection Modal -->
+  <div class="modal-overlay hidden" id="connectionModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="connectionModalTitle">Manage Connections</h2>
+        <button class="modal-close" onclick="closeConnectionModal()">×</button>
+      </div>
+
+      <div id="connectionsList"></div>
+
+      <div style="margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 2px solid var(--border-light);">
+        <h3 class="section-title" id="addNewConnectionTitle">Add New Connection</h3>
+
+        <div class="form-group">
+          <label class="form-label" id="player1Label">Player 1</label>
+          <select class="form-select" id="connectionPlayer1">
+            <option value="">Select player...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" id="player2Label">Player 2</label>
+          <select class="form-select" id="connectionPlayer2">
+            <option value="">Select player...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-checkbox-label">
+            <input type="checkbox" class="form-checkbox" id="sessionOnly" checked />
+            <span id="sessionOnlyLabel">This session only</span>
+          </label>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-block" onclick="handleAddConnection()" id="addConnectionBtn">
+          Add Connection
+        </button>
+      </div>
+
+      <div class="btn-group mt-lg">
+        <button type="button" class="btn btn-secondary btn-block" onclick="closeConnectionModal()" id="doneBtn">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Player Action Menu -->
+  <div class="modal-overlay hidden" id="playerActionModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="playerActionName">Player Actions</h2>
+        <button class="modal-close" onclick="closePlayerActionModal()">×</button>
+      </div>
+
+      <div class="btn-group vertical">
+        <button class="btn btn-secondary" onclick="handlePlayerConnect()">
+          <span style="font-size: 20px;">🔗</span>
+          <span id="connectMenuBtn">Manage Connections</span>
+        </button>
+
+        <button class="btn btn-secondary" onclick="handlePlayerEdit()">
+          <span style="font-size: 20px;">✏️</span>
+          <span id="editMenuBtn">Edit Player</span>
+        </button>
+
+        <button class="btn btn-danger" onclick="handlePlayerDelete()">
+          <span style="font-size: 20px;">🗑️</span>
+          <span id="deleteMenuBtn">Delete Player</span>
+        </button>
+      </div>
+
+      <div class="btn-group mt-lg">
+        <button type="button" class="btn btn-secondary btn-block" onclick="closePlayerActionModal()" id="cancelBtn3">
+          Cancel
+        </button>
+      </div>
+    </div>
   </div>
 
   <script type="module">
-    import { getToken, clearAuth } from './lib/auth.js';
+    import { getToken } from './lib/auth.js';
+    import { t, initLanguage, toggleLanguage as toggleLang, getLanguage } from './i18n.js';
 
     const API_BASE = window.location.origin;
-    let selectedGroupId = null;
-    let selectedPlayers = new Set();
-    let currentSessionId = null;
-
-    // Elements
-    const groupsList = document.getElementById('groups-list');
-    const playerSelection = document.getElementById('player-selection');
-    const playersList = document.getElementById('players-list');
-    const teamConfig = document.getElementById('team-config');
-    const generateBtn = document.getElementById('generate-btn');
-    const errorMessage = document.getElementById('error-message');
-    const logoutBtn = document.getElementById('logout-btn');
-
-    // Auth check
     const token = getToken();
+
     if (!token) {
       window.location.href = '/login.html';
     }
 
-    // Logout
-    logoutBtn.addEventListener('click', () => {
-      clearAuth();
-      window.location.href = '/login.html';
+    // Initialize language
+    initLanguage();
+
+    // State
+    let currentGroupId = new URLSearchParams(window.location.search).get('groupId');
+    let currentSessionId = null;
+    let currentSport = 'basketball';
+    let allPlayers = [];
+    let selectedPlayers = new Set();
+    let connections = [];
+    let currentPlayer = null;
+
+    // Language toggle
+    window.toggleLanguage = function() {
+      toggleLang();
+      updateAllText();
+      renderPlayers();
+    };
+
+    // Update all text elements
+    function updateAllText() {
+      const lang = getLanguage();
+
+      // Header
+      document.getElementById('backText').textContent = t('back');
+      document.getElementById('langToggleText').textContent = lang === 'en' ? 'עב' : 'EN';
+      document.getElementById('addPlayerBtn').textContent = t('addPlayer');
+      document.getElementById('friendsBtn').textContent = t('friends');
+      document.getElementById('createTeamsText').textContent = t('createTeams');
+
+      // Modals
+      document.getElementById('addPlayerModalTitle').textContent = t('addNewPlayer');
+      document.getElementById('editPlayerModalTitle').textContent = t('editPlayer');
+      document.getElementById('connectionModalTitle').textContent = t('manageConnections');
+      document.getElementById('addNewConnectionTitle').textContent = t('addNewConnection');
+
+      // Form labels
+      document.getElementById('playerNameLabel').textContent = t('playerName') + ' *';
+      document.getElementById('editPlayerNameLabel').textContent = t('playerName') + ' *';
+      document.getElementById('positionLabel').textContent = t('position');
+      document.getElementById('editPositionLabel').textContent = t('position');
+      document.getElementById('includeInSessionLabel').textContent = t('includeInSession');
+      document.getElementById('sessionOnlyLabel').textContent = t('sessionOnly');
+      document.getElementById('player1Label').textContent = t('player1');
+      document.getElementById('player2Label').textContent = t('player2');
+
+      // Buttons
+      document.getElementById('cancelBtn1').textContent = t('cancel');
+      document.getElementById('cancelBtn2').textContent = t('cancel');
+      document.getElementById('cancelBtn3').textContent = t('cancel');
+      document.getElementById('addPlayerSubmit').textContent = t('addPlayer');
+      document.getElementById('saveChangesBtn').textContent = t('save');
+      document.getElementById('addConnectionBtn').textContent = t('addConnection');
+      document.getElementById('doneBtn').textContent = t('done');
+
+      // Action menu
+      document.getElementById('connectMenuBtn').textContent = t('connect');
+      document.getElementById('editMenuBtn').textContent = t('edit');
+      document.getElementById('deleteMenuBtn').textContent = t('delete');
+
+      // Position options
+      document.getElementById('noPositionOption').textContent = t('noPosition');
+      document.getElementById('editNoPositionOption').textContent = t('noPosition');
+
+      updateTeamSize();
+    }
+
+    // Load initial data
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (!currentGroupId) {
+        alert('No group selected');
+        window.location.href = '/groups.html';
+        return;
+      }
+
+      await loadGroup();
+      await loadPlayers();
+      await loadConnections();
+      updateAllText();
     });
 
-    // API helper
-    async function apiRequest(endpoint, options = {}) {
+    async function loadGroup() {
       try {
-        const response = await fetch(`${API_BASE}${endpoint}`, {
-          ...options,
+        const response = await fetch(`${API_BASE}/api/groups/list`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        const group = data.groups.find(g => g.id === currentGroupId);
+
+        if (group) {
+          currentSport = group.sport;
+          const sportIcon = group.sport === 'basketball' ? '🏀' : '⚽';
+          document.getElementById('sportIcon').textContent = sportIcon;
+          document.getElementById('headerTitle').textContent = group.name;
+
+          // Update position options based on sport
+          updatePositionOptions();
+        }
+      } catch (error) {
+        console.error('Failed to load group:', error);
+      }
+    }
+
+    function updatePositionOptions() {
+      const positionSelect = document.getElementById('playerPosition');
+      const editPositionSelect = document.getElementById('editPlayerPosition');
+
+      const noPos = `<option value="">${t('noPosition')}</option>`;
+
+      if (currentSport === 'basketball') {
+        const options = noPos + `
+          <option value="Guard">${t('guard')}</option>
+          <option value="Forward">${t('forward')}</option>
+          <option value="Center">${t('center')}</option>
+        `;
+        positionSelect.innerHTML = options;
+        editPositionSelect.innerHTML = options;
+      } else {
+        const options = noPos + `
+          <option value="Goalkeeper">${t('goalkeeper')}</option>
+          <option value="Defender">${t('defender')}</option>
+          <option value="Midfielder">${t('midfielder')}</option>
+          <option value="Forward">${t('forwardFootball')}</option>
+        `;
+        positionSelect.innerHTML = options;
+        editPositionSelect.innerHTML = options;
+      }
+    }
+
+    async function loadPlayers() {
+      try {
+        const response = await fetch(`${API_BASE}/api/players/list?groupId=${currentGroupId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        allPlayers = data.players || [];
+        renderPlayers();
+      } catch (error) {
+        console.error('Failed to load players:', error);
+        showToast(t('failedToLoad'), 'error');
+      }
+    }
+
+    async function loadConnections() {
+      try {
+        const response = await fetch(`${API_BASE}/api/connections/list?groupId=${currentGroupId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        connections = data.connections || [];
+        renderPlayers();
+      } catch (error) {
+        console.error('Failed to load connections:', error);
+      }
+    }
+
+    function renderPlayers() {
+      const container = document.getElementById('playersList');
+
+      if (allPlayers.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <div class="empty-state-text">
+              ${t('noPlayersYet')}<br>${t('tapAddPlayer')}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = allPlayers.map(player => {
+        const isSelected = selectedPlayers.has(player.id);
+        const connectionCount = player.connectionCount || 0;
+
+        // Get connected player names
+        const connectedNames = [];
+        if (player.connectedPlayerIds && player.connectedPlayerIds.length > 1) {
+          player.connectedPlayerIds.forEach(id => {
+            if (id !== player.id) {
+              const connectedPlayer = allPlayers.find(p => p.id === id);
+              if (connectedPlayer) {
+                connectedNames.push(connectedPlayer.name);
+              }
+            }
+          });
+        }
+
+        const initial = player.name.charAt(0).toUpperCase();
+        const avatarClass = currentSport === 'basketball' ? 'basketball' : 'football';
+
+        return `
+          <div class="player-card ${isSelected ? 'selected' : ''}" data-player-id="${player.id}">
+            <div class="checkbox" onclick="togglePlayer(event, '${player.id}')"></div>
+
+            <div class="player-avatar ${avatarClass}">${initial}</div>
+
+            <div class="player-info">
+              <div class="player-name">${player.name}</div>
+              <div class="player-position">${player.position || t('noPosition')}</div>
+              ${connectedNames.length > 0 ? `
+                <div class="player-connections">
+                  ${t('friendsWith')} ${connectedNames.slice(0, 2).join(', ')}${connectedNames.length > 2 ? '...' : ''}
+                </div>
+              ` : ''}
+            </div>
+
+            ${connectionCount > 0 ? `
+              <button class="connection-badge ${currentSport}" onclick="openConnectionBadge(event, '${player.id}')">
+                🔗 ${connectionCount}
+              </button>
+            ` : ''}
+
+            <button class="action-menu-btn" onclick="openPlayerActionMenu(event, '${player.id}')">
+              ⋮
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      updateTeamSize();
+    }
+
+    window.togglePlayer = function(event, playerId) {
+      event.stopPropagation();
+
+      if (selectedPlayers.has(playerId)) {
+        selectedPlayers.delete(playerId);
+      } else {
+        selectedPlayers.add(playerId);
+      }
+
+      renderPlayers();
+    };
+
+    function updateTeamSize() {
+      const count = selectedPlayers.size;
+      const statusCount = document.getElementById('statusCount');
+      const generateBtn = document.getElementById('generateBtn');
+      const teamSizeText = document.getElementById('teamSizeText');
+
+      statusCount.querySelector('span:first-child').textContent = count;
+      document.getElementById('playersReadyText').textContent = t('playersReady', count).split(count)[1].trim();
+
+      if (count >= 2) {
+        // Calculate team size: largest possible equal teams
+        const teamSize = Math.floor(count / 2);
+        const bench = count % 2;
+        teamSizeText.textContent = t('teamsInfo', teamSize, bench);
+        generateBtn.disabled = false;
+      } else {
+        teamSizeText.textContent = '';
+        generateBtn.disabled = true;
+      }
+    }
+
+    // Add Player Modal
+    window.openAddPlayerModal = function() {
+      updatePositionOptions();
+      document.getElementById('addPlayerModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('playerName').focus(), 100);
+    };
+
+    window.closeAddPlayerModal = function() {
+      document.getElementById('addPlayerModal').classList.add('hidden');
+      document.getElementById('addPlayerForm').reset();
+      document.getElementById('includeInSession').checked = true;
+    };
+
+    window.handleAddPlayer = async function(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('playerName').value.trim();
+      const position = document.getElementById('playerPosition').value;
+      const includeInSession = document.getElementById('includeInSession').checked;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/players/add`, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            ...options.headers
-          }
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            groupId: currentGroupId,
+            name,
+            position: position || null
+          })
         });
 
-        // Check content type before parsing
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error(`Server returned ${response.status}: Expected JSON but got ${contentType || 'unknown'}`);
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to add player');
         }
 
         const data = await response.json();
 
+        // Add to local state
+        allPlayers.push({
+          id: data.player.id,
+          name: data.player.name,
+          position: data.player.position,
+          connectionCount: 0,
+          connectedPlayerIds: []
+        });
+
+        if (includeInSession) {
+          selectedPlayers.add(data.player.id);
+        }
+
+        closeAddPlayerModal();
+        renderPlayers();
+        showToast(t('playerAdded'), 'success');
+      } catch (error) {
+        console.error('Add player error:', error);
+        showToast(error.message, 'error');
+      }
+    };
+
+    // Edit Player Modal
+    window.handlePlayerEdit = function() {
+      closePlayerActionModal();
+
+      const player = allPlayers.find(p => p.id === currentPlayer);
+      if (!player) return;
+
+      document.getElementById('editPlayerName').value = player.name;
+      document.getElementById('editPlayerPosition').value = player.position || '';
+
+      updatePositionOptions();
+      document.getElementById('editPlayerModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('editPlayerName').focus(), 100);
+    };
+
+    window.closeEditPlayerModal = function() {
+      document.getElementById('editPlayerModal').classList.add('hidden');
+      document.getElementById('editPlayerForm').reset();
+    };
+
+    window.handleEditPlayer = async function(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('editPlayerName').value.trim();
+      const position = document.getElementById('editPlayerPosition').value;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/players/update`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            playerId: currentPlayer,
+            name,
+            position: position || null
+          })
+        });
+
         if (!response.ok) {
-          throw new Error(data.error || `Request failed with status ${response.status}`);
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to update player');
         }
 
-        return data;
+        // Update local state
+        const player = allPlayers.find(p => p.id === currentPlayer);
+        if (player) {
+          player.name = name;
+          player.position = position;
+        }
+
+        closeEditPlayerModal();
+        renderPlayers();
+        showToast(t('playerUpdated'), 'success');
       } catch (error) {
-        // If JSON parsing fails, provide clear error
-        if (error instanceof SyntaxError) {
-          throw new Error('Server returned invalid response. Please refresh and try again.');
-        }
-        throw error;
+        console.error('Edit player error:', error);
+        showToast(error.message, 'error');
       }
-    }
+    };
 
-    // Show error
-    function showError(message) {
-      errorMessage.textContent = message;
-      errorMessage.classList.remove('hidden');
-      setTimeout(() => {
-        errorMessage.classList.add('hidden');
-      }, 5000);
-    }
+    // Delete Player
+    window.handlePlayerDelete = async function() {
+      closePlayerActionModal();
 
-    // Load groups
-    async function loadGroups() {
-      try {
-        const data = await apiRequest('/api/groups/list');
+      const player = allPlayers.find(p => p.id === currentPlayer);
+      if (!player) return;
 
-        if (!data.groups || data.groups.length === 0) {
-          groupsList.innerHTML = '<p>No groups found. Create a group first.</p>';
-          return;
-        }
-
-        groupsList.innerHTML = '';
-        groupsList.classList.remove('loading');
-
-        data.groups.forEach(group => {
-          const groupCard = document.createElement('div');
-          groupCard.className = 'group-card';
-          groupCard.innerHTML = `
-            <h3>${group.name}</h3>
-            <p class="group-meta">${group.sport} • ${group.location || 'No location'}</p>
-            <p class="group-meta">${group.playerCount || 0} players</p>
-          `;
-          groupCard.addEventListener('click', () => selectGroup(group.id, group.name));
-          groupsList.appendChild(groupCard);
-        });
-      } catch (error) {
-        console.error('Failed to load groups:', error);
-        showError('Failed to load groups: ' + error.message);
-        groupsList.innerHTML = '<p class="error">Failed to load groups</p>';
-      }
-    }
-
-    // Select group and load players
-    async function selectGroup(groupId, groupName) {
-      selectedGroupId = groupId;
-
-      // Highlight selected group
-      document.querySelectorAll('.group-card').forEach(card => {
-        card.classList.remove('selected');
-      });
-      event.target.closest('.group-card').classList.add('selected');
-
-      // Load players
-      try {
-        playersList.innerHTML = '<p class="loading">Loading players...</p>';
-        playerSelection.classList.remove('hidden');
-
-        const data = await apiRequest(`/api/players/list?groupId=${groupId}`);
-
-        if (!data.players || data.players.length === 0) {
-          playersList.innerHTML = '<p>No players in this group yet.</p>';
-          return;
-        }
-
-        playersList.innerHTML = '';
-        selectedPlayers.clear();
-
-        data.players.forEach(player => {
-          const playerCard = document.createElement('label');
-          playerCard.className = 'player-checkbox-card';
-
-          // Show position only (ratings hidden for regular users)
-          const metaText = player.position || 'No Position';
-
-          playerCard.innerHTML = `
-            <input type="checkbox" value="${player.id}" class="player-checkbox">
-            <div class="player-info">
-              <div class="player-name">${player.name}</div>
-              <div class="player-meta">${metaText}</div>
-            </div>
-          `;
-          playersList.appendChild(playerCard);
-
-          const checkbox = playerCard.querySelector('input');
-          checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-              selectedPlayers.add(player.id);
-            } else {
-              selectedPlayers.delete(player.id);
-            }
-            updateGenerateButton();
-          });
-        });
-
-        teamConfig.classList.remove('hidden');
-      } catch (error) {
-        console.error('Failed to load players:', error);
-        showError('Failed to load players: ' + error.message);
-        playersList.innerHTML = '<p class="error">Failed to load players</p>';
-      }
-    }
-
-    // Calculate optimal team size based on player count
-    function calculateTeamSize(playerCount) {
-      // Always divide by 2 teams + 1 bench
-      // Examples: 9 players = 4v4+1, 7 players = 3v3+1, 11 players = 5v5+1
-      return Math.floor((playerCount - 1) / 2);
-    }
-
-    // Update generate button state
-    function updateGenerateButton() {
-      const playerCount = selectedPlayers.size;
-      const teamConfigInfo = document.getElementById('team-config-info');
-
-      if (playerCount >= 2) {
-        const teamSize = calculateTeamSize(playerCount);
-        const benchSize = playerCount - (teamSize * 2);
-
-        teamConfigInfo.innerHTML = `
-          <p><strong>${playerCount} players selected</strong></p>
-          <p>Teams: <strong>${teamSize}v${teamSize}</strong> + <strong>${benchSize} on bench</strong></p>
-        `;
-
-        generateBtn.disabled = false;
-        generateBtn.textContent = 'Generate Teams';
-      } else {
-        teamConfigInfo.innerHTML = '<p>Select at least 2 players to continue</p>';
-        generateBtn.disabled = true;
-        generateBtn.textContent = 'Select at least 2 players';
-      }
-    }
-
-    // Generate teams
-    generateBtn.addEventListener('click', async () => {
-      if (selectedPlayers.size < 2) {
-        showError('Select at least 2 players');
+      if (!confirm(t('deletePlayerConfirm', player.name))) {
         return;
       }
 
       try {
-        generateBtn.disabled = true;
-        generateBtn.textContent = 'Generating...';
-
-        // Create session
-        const sessionData = await apiRequest('/api/sessions/create', {
-          method: 'POST',
-          body: JSON.stringify({ groupId: selectedGroupId })
+        const response = await fetch(`${API_BASE}/api/players/delete`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ playerId: currentPlayer })
         });
 
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to delete player');
+        }
+
+        // Remove from local state
+        allPlayers = allPlayers.filter(p => p.id !== currentPlayer);
+        selectedPlayers.delete(currentPlayer);
+
+        renderPlayers();
+        showToast(t('playerDeleted'), 'success');
+      } catch (error) {
+        console.error('Delete player error:', error);
+        showToast(error.message, 'error');
+      }
+    };
+
+    // Connection Modal
+    window.openConnectionModal = function() {
+      document.getElementById('connectionModal').classList.remove('hidden');
+      renderConnectionModal();
+    };
+
+    window.closeConnectionModal = function() {
+      document.getElementById('connectionModal').classList.add('hidden');
+    };
+
+    function renderConnectionModal() {
+      // Populate player dropdowns
+      const player1Select = document.getElementById('connectionPlayer1');
+      const player2Select = document.getElementById('connectionPlayer2');
+
+      const selectedArray = Array.from(selectedPlayers);
+      const selectedPlayersList = allPlayers.filter(p => selectedArray.includes(p.id));
+
+      // Populate Player 1 dropdown
+      player1Select.innerHTML = '<option value="">Select player...</option>' +
+        selectedPlayersList.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+      // Function to update Player 2 based on Player 1 selection
+      const updatePlayer2Options = () => {
+        const player1Id = player1Select.value;
+        // Filter out Player 1 from Player 2 options
+        const availableForPlayer2 = selectedPlayersList.filter(p => p.id !== player1Id);
+
+        player2Select.innerHTML = '<option value="">Select player...</option>' +
+          availableForPlayer2.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+      };
+
+      // Add change listener to Player 1
+      player1Select.removeEventListener('change', updatePlayer2Options); // Remove old listener
+      player1Select.addEventListener('change', updatePlayer2Options);
+
+      // If opened from player action menu, preselect that player
+      if (currentPlayer && selectedPlayers.has(currentPlayer)) {
+        player1Select.value = currentPlayer;
+      }
+
+      // Update Player 2 options based on initial Player 1 selection
+      updatePlayer2Options();
+
+      // Render existing connections
+      const connectionsList = document.getElementById('connectionsList');
+
+      if (connections.length === 0) {
+        connectionsList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-text">${t('noConnectionsYet')}</div>
+          </div>
+        `;
+        return;
+      }
+
+      connectionsList.innerHTML = `<h3 class="section-title">${t('currentConnections')}</h3>` +
+        connections.map(conn => {
+          const player1 = allPlayers.find(p => p.id === conn.player_id);
+          const player2 = allPlayers.find(p => p.id === conn.connected_to_id);
+
+          if (!player1 || !player2) return '';
+
+          return `
+            <div class="connection-item">
+              <div class="connection-players">${player1.name} ↔ ${player2.name}</div>
+              <div class="connection-source group-default">${t('sourceGroupDefault')}</div>
+              <div class="connection-actions">
+                <button class="btn-small btn-danger" onclick="handleRemoveConnection('${conn.player_id}', '${conn.connected_to_id}')">
+                  ${t('remove')}
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+    }
+
+    window.handleAddConnection = async function() {
+      const player1Id = document.getElementById('connectionPlayer1').value;
+      const player2Id = document.getElementById('connectionPlayer2').value;
+      const sessionOnly = document.getElementById('sessionOnly').checked;
+
+      if (!player1Id || !player2Id) {
+        showToast(t('selectBothPlayers'), 'error');
+        return;
+      }
+
+      if (player1Id === player2Id) {
+        showToast(t('cannotConnectSelf'), 'error');
+        return;
+      }
+
+      try {
+        const endpoint = sessionOnly ? '/api/sessions/add-connection' : '/api/connections/add';
+        const body = sessionOnly
+          ? { sessionId: currentSessionId, playerId: player1Id, connectedToId: player2Id }
+          : { groupId: currentGroupId, playerId: player1Id, connectedToId: player2Id };
+
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || t('failedToAddConnection'));
+        }
+
+        await loadPlayers();
+        await loadConnections();
+        renderConnectionModal();
+        showToast(t('connectionAdded'), 'success');
+      } catch (error) {
+        console.error('Add connection error:', error);
+        showToast(error.message, 'error');
+      }
+    };
+
+    window.handleRemoveConnection = async function(playerId, connectedToId) {
+      if (!confirm(t('removeConnectionConfirm'))) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/connections/remove`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ playerId, connectedToId })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to remove connection');
+        }
+
+        await loadPlayers();
+        await loadConnections();
+        renderConnectionModal();
+        showToast(t('connectionRemoved'), 'success');
+      } catch (error) {
+        console.error('Remove connection error:', error);
+        showToast(error.message, 'error');
+      }
+    };
+
+    window.openConnectionBadge = function(event, playerId) {
+      event.stopPropagation();
+      currentPlayer = playerId;
+      openConnectionModal();
+    };
+
+    // Player Action Menu
+    window.openPlayerActionMenu = function(event, playerId) {
+      event.stopPropagation();
+      currentPlayer = playerId;
+      const player = allPlayers.find(p => p.id === playerId);
+      document.getElementById('playerActionName').textContent = player.name;
+      document.getElementById('playerActionModal').classList.remove('hidden');
+    };
+
+    window.closePlayerActionModal = function() {
+      document.getElementById('playerActionModal').classList.add('hidden');
+      currentPlayer = null;
+    };
+
+    window.handlePlayerConnect = function() {
+      closePlayerActionModal();
+      openConnectionModal();
+    };
+
+    // Generate Teams
+    window.generateTeams = async function() {
+      if (selectedPlayers.size < 2) {
+        showToast(t('selectAtLeast2'), 'error');
+        return;
+      }
+
+      const generateBtn = document.getElementById('generateBtn');
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = '<span class="loading"></span>';
+
+      try {
+        // Create session
+        const sessionResponse = await fetch(`${API_BASE}/api/sessions/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ groupId: currentGroupId })
+        });
+
+        const sessionData = await sessionResponse.json();
         currentSessionId = sessionData.session.id;
 
-        // Select players for session
-        await apiRequest('/api/sessions/select-players', {
+        // Select players
+        await fetch(`${API_BASE}/api/sessions/select-players`, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({
             sessionId: currentSessionId,
             playerIds: Array.from(selectedPlayers)
           })
         });
 
-        // Calculate team size and generate teams
-        const teamSize = calculateTeamSize(selectedPlayers.size);
-        const teamsData = await apiRequest('/api/sessions/generate-teams', {
+        // Generate teams
+        // Calculate team size: use largest possible equal teams
+        // For 6 players: 3v3, For 8 players: 4v4, For 7 players: 3v3+1 bench
+        const totalPlayers = selectedPlayers.size;
+        const teamSize = Math.floor(totalPlayers / 2);
+        const teamsResponse = await fetch(`${API_BASE}/api/sessions/generate-teams`, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({
             sessionId: currentSessionId,
-            teamSize: teamSize
+            teamSize
           })
         });
 
-        // Store results and navigate to display page
+        const teamsData = await teamsResponse.json();
+
+        // Store and navigate
         sessionStorage.setItem('currentSession', JSON.stringify({
           sessionId: currentSessionId,
-          groupName: teamsData.session.groupName,
-          teamSize: teamSize,
+          groupName: document.getElementById('headerTitle').textContent,
+          sport: currentSport,
+          teamSize,
           teams: teamsData.teams,
           bench: teamsData.bench,
           balance: teamsData.balance
@@ -281,15 +875,27 @@
 
         window.location.href = '/team-display.html';
       } catch (error) {
-        console.error('Failed to generate teams:', error);
-        showError('Failed to generate teams: ' + error.message);
+        console.error('Generate teams error:', error);
+        showToast(t('failedToGenerateTeams'), 'error');
         generateBtn.disabled = false;
-        updateGenerateButton();
+        generateBtn.innerHTML = `<span style="font-size: 22px;">⚡</span><span>${t('createTeams')}</span>`;
       }
-    });
+    };
 
-    // Initialize
-    loadGroups();
+    window.goBack = function() {
+      window.history.back();
+    };
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
   </script>
 </body>
 </html>
