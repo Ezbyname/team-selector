@@ -9,11 +9,11 @@ CREATE TABLE IF NOT EXISTS group_invites (
   created_by UUID NOT NULL REFERENCES auth_users(id) ON DELETE CASCADE,
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  expires_at TIMESTAMPTZ,  -- NULL = no expiration
-
-  -- Indexes for fast lookups
-  CONSTRAINT unique_active_code_per_group UNIQUE (group_id, is_active)
+  expires_at TIMESTAMPTZ  -- NULL = no expiration
 );
+
+-- CRITICAL: Only ONE active code per group (but many inactive allowed)
+CREATE UNIQUE INDEX unique_active_code_per_group ON group_invites(group_id) WHERE is_active = true;
 
 -- Index for code lookups (most common query)
 CREATE INDEX idx_group_invites_code ON group_invites(code) WHERE is_active = true;

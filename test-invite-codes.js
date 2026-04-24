@@ -554,11 +554,21 @@ async function testRevokedCode() {
 
   // Test 4.1: Admin can revoke invite code
   log.info('Test 4.1: Admin revokes invite code...');
+
+  // Debug: Check what code we're trying to revoke
+  log.info(`  Current inviteCode: ${testState.inviteCode}`);
+  log.info(`  Admin user ID: ${testState.adminUser.id}`);
+  log.info(`  Test group ID: ${testState.testGroup.id}`);
+
   const revokeResponse = await request('/api/groups/revoke-invite', {
     method: 'POST',
     token: testState.adminToken,
     body: { groupId: testState.testGroup.id },
   });
+
+  if (revokeResponse.status !== 200) {
+    log.error(`  Revoke failed with: ${JSON.stringify(revokeResponse.data, null, 2)}`);
+  }
 
   assertJSON(revokeResponse, 'Revoke response returns JSON');
   assert(revokeResponse.status === 200, `Revoke succeeds with 200 (got ${revokeResponse.status})`);
