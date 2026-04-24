@@ -76,60 +76,97 @@ function setupCountrySelector() {
   const selectedFlag = document.getElementById('selectedFlag');
   const selectedCode = document.getElementById('selectedCode');
 
-  if (!countrySelector || !countryDropdown) return;
+  if (!countrySelector || !countryDropdown || !phoneInput || !phonePrefix) {
+    return;
+  }
 
-  // Toggle dropdown on click
+  // --- TOGGLE DROPDOWN ---
   countrySelector.addEventListener('click', (e) => {
+    e.preventDefault();
     e.stopPropagation();
+
     countryDropdown.classList.toggle('hidden');
   });
 
-  // Handle country selection
-  const countryOptions = countryDropdown.querySelectorAll('.country-option');
-  countryOptions.forEach(option => {
-    option.addEventListener('click', (e) => {
-      e.stopPropagation();
+  // --- SELECT COUNTRY ---
+	const countryOptions = countryDropdown.querySelectorAll('.country-option');
 
-      const flag = option.getAttribute('data-flag');
-      const code = option.getAttribute('data-code');
-      const prefix = option.getAttribute('data-prefix');
+	countryOptions.forEach(option => {
+	  option.addEventListener('click', (e) => {
+		e.preventDefault();
+		e.stopPropagation();
 
-      // Update selector display
-      if (selectedFlag) selectedFlag.textContent = flag;
-      if (selectedCode) selectedCode.textContent = code;
+		const flagSrc = option.dataset.flagSrc;
+		const code = option.dataset.code;
+		const prefix = option.dataset.prefix;
 
-      // Update phone prefix
-      if (phonePrefix) phonePrefix.textContent = prefix;
+		// Update UI: selectedFlag is now an <img>, not a text/span emoji
+		if (selectedFlag) {
+		  selectedFlag.src = flagSrc;
+		  selectedFlag.alt = code;
+		}
 
-      // Store current country code for validation
-      authState.countryCode = prefix;
+		if (selectedCode) {
+		  selectedCode.textContent = code;
+		}
 
-      // Clear phone input
-      if (phoneInput) phoneInput.value = '';
+		phonePrefix.textContent = prefix;
 
-      // Close dropdown
-      countryDropdown.classList.add('hidden');
-    });
-  });
+		// Store state
+		if (window.authState) {
+		  authState.countryCode = prefix;
+		}
 
-  // Close dropdown when clicking outside
+		// Reset input
+		phoneInput.value = '';
+
+		// Close dropdown
+		countryDropdown.classList.add('hidden');
+
+		// Focus input for better UX
+		phoneInput.focus();
+	  });
+	});
+
+  // --- CLICK OUTSIDE CLOSE ---
   document.addEventListener('click', (e) => {
-    if (!countrySelector.contains(e.target) && !countryDropdown.contains(e.target)) {
+    const isClickInsideSelector = countrySelector.contains(e.target);
+    const isClickInsideDropdown = countryDropdown.contains(e.target);
+
+    if (!isClickInsideSelector && !isClickInsideDropdown) {
       countryDropdown.classList.add('hidden');
     }
   });
 
-  // Digits only in phone input
-  if (phoneInput) {
-    phoneInput.addEventListener('input', (e) => {
-      e.target.value = e.target.value.replace(/[^\d]/g, '');
-    });
+  // --- DIGITS ONLY INPUT ---
+  phoneInput.addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/\D/g, '');
+  });
+
+  // --- PREVENT SCROLL JUMP ON MOBILE ---
+  phoneInput.addEventListener('focus', () => {
+    setTimeout(() => {
+      phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 200);
+  });
+
+  // --- DEFAULT STATE ---
+  if (window.authState) {
+    authState.countryCode = '+972';
   }
 
-  // Initialize with default (Israel)
-  authState.countryCode = '+972';
-}
+  if (phonePrefix) {
+    phonePrefix.textContent = '+972';
+  }
 
+  if (selectedFlag) {
+    selectedFlag.textContent = '🇮🇱';
+  }
+
+  if (selectedCode) {
+    selectedCode.textContent = 'IL';
+  }
+}
 /**
  * Show authentication screen
  * @param {string} screen - 'phone', 'otp', 'register', or 'login'
