@@ -699,7 +699,7 @@ async function testExpiredCode() {
 
     // Create fresh code
     const futureCode = `FUTURE-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    const { error: insertError } = await supabase
+    const { error: futureInsertError } = await supabase
       .from('group_invites')
       .insert({
         group_id: testState.secondGroup.id,
@@ -709,9 +709,9 @@ async function testExpiredCode() {
         expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // 1 day future
       });
 
-    if (insertError) {
-      log.error(`  Failed to insert future code: ${insertError.message}`);
-      log.error(`  Error details: ${JSON.stringify(insertError, null, 2)}`);
+    if (futureInsertError) {
+      log.error(`  Failed to insert future code: ${futureInsertError.message}`);
+      log.error(`  Error details: ${JSON.stringify(futureInsertError, null, 2)}`);
     }
 
     // Ensure regular user is not in second group (in case they joined earlier)
