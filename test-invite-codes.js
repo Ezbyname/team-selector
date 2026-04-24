@@ -1040,11 +1040,18 @@ async function testAuthRequirements() {
   // Test 9.2: Unauthenticated join-by-code
   log.info('\nTest 9.2: Join by code without auth token...');
 
-  const { data: codeForAuth } = await request('/api/groups/create-invite', {
+  const codeForAuth = await request('/api/groups/create-invite', {
     method: 'POST',
     token: testState.adminToken,
     body: { groupId: testState.testGroup.id },
   });
+
+  if (codeForAuth.status !== 200 || !codeForAuth.data.inviteCode) {
+    log.error(`Failed to create code for auth test: ${JSON.stringify(codeForAuth.data)}`);
+    stats.total++;
+    stats.failed++;
+    return;
+  }
 
   const noAuthJoin = await request('/api/groups/join-by-code', {
     method: 'POST',
