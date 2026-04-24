@@ -981,11 +981,19 @@ async function testPerTeamRoles() {
     { expiresIn: '1h' }
   );
 
-  const { data: newGroupInvite } = await request('/api/groups/create-invite', {
+  const newGroupInvite = await request('/api/groups/create-invite', {
     method: 'POST',
     token: newGroupAdminToken,
     body: { groupId: newGroup.id },
   });
+
+  if (newGroupInvite.status !== 200 || !newGroupInvite.data.inviteCode) {
+    log.error(`Failed to create invite for new group: ${JSON.stringify(newGroupInvite.data)}`);
+    stats.total++;
+    stats.failed++;
+    await supabase.from('groups').delete().eq('id', newGroup.id);
+    return;
+  }
 
   // Third user joins the new group
   await request('/api/groups/join-by-code', {
