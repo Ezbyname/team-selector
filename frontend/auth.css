@@ -103,6 +103,7 @@
   gap: 12px;
   position: relative;
   direction: ltr;
+  overflow: visible;
 }
 
 /* Country Selector */
@@ -142,17 +143,6 @@
   font-size: 16px;
   font-weight: 700;
   color: #111827;
-}
-
-.country-selector .chevron {
-  font-size: 18px;
-  color: #6B7280;
-  margin-left: -2px;
-}
-
-.chevron {
-  font-size: 14px;
-  line-height: 1;
 }
 
 /* Phone Input Wrapper */

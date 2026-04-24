@@ -160,7 +160,8 @@ function setupCountrySelector() {
   }
 
   if (selectedFlag) {
-    selectedFlag.textContent = '🇮🇱';
+    selectedFlag.src = 'https://flagcdn.com/w40/il.png';
+    selectedFlag.alt = 'IL';
   }
 
   if (selectedCode) {

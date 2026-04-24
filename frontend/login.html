@@ -20,10 +20,9 @@
           <div class="form-group">
             <label for="phoneInput">Phone Number</label>
             <div class="phone-field">
-              <button type="button" class="country-selector" id="countrySelector">
-                <span class="flag" id="selectedFlag">🇮🇱</span>
-                <span class="country-code" id="selectedCode">IL</span>
-                <span class="chevron">⌄</span>
+              <button type="button" class="country-selector" id="countrySelector" aria-label="Select country">
+                <img id="selectedFlag" class="country-flag" src="https://flagcdn.com/w40/il.png" alt="IL">
+                <span id="selectedCode">IL</span>
               </button>
 
               <div class="phone-input-wrapper">
@@ -33,107 +32,108 @@
                   class="phone-input"
                   type="tel"
                   inputmode="numeric"
-                  placeholder="Enter phone number"
-                  autocomplete="tel"
+                  pattern="[0-9]*"
+                  placeholder="501234567"
+                  autocomplete="tel-national"
                   required
                 />
               </div>
-            </div>
 
-            <div class="country-dropdown hidden" id="countryDropdown">
-              <button type="button" class="country-option" data-code="IL" data-prefix="+972" data-flag="🇮🇱">
-                <span>🇮🇱 IL</span>
+              <div class="country-dropdown hidden" id="countryDropdown">
+              <button type="button" class="country-option" data-code="IL" data-prefix="+972" data-flag-src="https://flagcdn.com/w40/il.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/il.png"> IL</span>
                 <span>+972</span>
               </button>
-              <button type="button" class="country-option" data-code="US" data-prefix="+1" data-flag="🇺🇸">
-                <span>🇺🇸 US</span>
+              <button type="button" class="country-option" data-code="US" data-prefix="+1" data-flag-src="https://flagcdn.com/w40/us.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/us.png"> US</span>
                 <span>+1</span>
               </button>
               <div class="country-divider"></div>
-              <button type="button" class="country-option" data-code="AT" data-prefix="+43" data-flag="🇦🇹">
-                <span>🇦🇹 AT</span>
+              <button type="button" class="country-option" data-code="AT" data-prefix="+43" data-flag-src="https://flagcdn.com/w40/at.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/at.png"> AT</span>
                 <span>+43</span>
               </button>
-              <button type="button" class="country-option" data-code="AU" data-prefix="+61" data-flag="🇦🇺">
-                <span>🇦🇺 AU</span>
+              <button type="button" class="country-option" data-code="AU" data-prefix="+61" data-flag-src="https://flagcdn.com/w40/au.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/au.png"> AU</span>
                 <span>+61</span>
               </button>
-              <button type="button" class="country-option" data-code="BE" data-prefix="+32" data-flag="🇧🇪">
-                <span>🇧🇪 BE</span>
+              <button type="button" class="country-option" data-code="BE" data-prefix="+32" data-flag-src="https://flagcdn.com/w40/be.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/be.png"> BE</span>
                 <span>+32</span>
               </button>
-              <button type="button" class="country-option" data-code="CN" data-prefix="+86" data-flag="🇨🇳">
-                <span>🇨🇳 CN</span>
+              <button type="button" class="country-option" data-code="CN" data-prefix="+86" data-flag-src="https://flagcdn.com/w40/cn.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/cn.png"> CN</span>
                 <span>+86</span>
               </button>
-              <button type="button" class="country-option" data-code="DK" data-prefix="+45" data-flag="🇩🇰">
-                <span>🇩🇰 DK</span>
+              <button type="button" class="country-option" data-code="DK" data-prefix="+45" data-flag-src="https://flagcdn.com/w40/dk.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/dk.png"> DK</span>
                 <span>+45</span>
               </button>
-              <button type="button" class="country-option" data-code="FI" data-prefix="+358" data-flag="🇫🇮">
-                <span>🇫🇮 FI</span>
+              <button type="button" class="country-option" data-code="FI" data-prefix="+358" data-flag-src="https://flagcdn.com/w40/fi.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/fi.png"> FI</span>
                 <span>+358</span>
               </button>
-              <button type="button" class="country-option" data-code="FR" data-prefix="+33" data-flag="🇫🇷">
-                <span>🇫🇷 FR</span>
+              <button type="button" class="country-option" data-code="FR" data-prefix="+33" data-flag-src="https://flagcdn.com/w40/fr.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/fr.png"> FR</span>
                 <span>+33</span>
               </button>
-              <button type="button" class="country-option" data-code="DE" data-prefix="+49" data-flag="🇩🇪">
-                <span>🇩🇪 DE</span>
+              <button type="button" class="country-option" data-code="DE" data-prefix="+49" data-flag-src="https://flagcdn.com/w40/de.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/de.png"> DE</span>
                 <span>+49</span>
               </button>
-              <button type="button" class="country-option" data-code="IN" data-prefix="+91" data-flag="🇮🇳">
-                <span>🇮🇳 IN</span>
+              <button type="button" class="country-option" data-code="IN" data-prefix="+91" data-flag-src="https://flagcdn.com/w40/in.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/in.png"> IN</span>
                 <span>+91</span>
               </button>
-              <button type="button" class="country-option" data-code="IT" data-prefix="+39" data-flag="🇮🇹">
-                <span>🇮🇹 IT</span>
+              <button type="button" class="country-option" data-code="IT" data-prefix="+39" data-flag-src="https://flagcdn.com/w40/it.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/it.png"> IT</span>
                 <span>+39</span>
               </button>
-              <button type="button" class="country-option" data-code="JP" data-prefix="+81" data-flag="🇯🇵">
-                <span>🇯🇵 JP</span>
+              <button type="button" class="country-option" data-code="JP" data-prefix="+81" data-flag-src="https://flagcdn.com/w40/jp.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/jp.png"> JP</span>
                 <span>+81</span>
               </button>
-              <button type="button" class="country-option" data-code="NL" data-prefix="+31" data-flag="🇳🇱">
-                <span>🇳🇱 NL</span>
+              <button type="button" class="country-option" data-code="NL" data-prefix="+31" data-flag-src="https://flagcdn.com/w40/nl.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/nl.png"> NL</span>
                 <span>+31</span>
               </button>
-              <button type="button" class="country-option" data-code="NO" data-prefix="+47" data-flag="🇳🇴">
-                <span>🇳🇴 NO</span>
+              <button type="button" class="country-option" data-code="NO" data-prefix="+47" data-flag-src="https://flagcdn.com/w40/no.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/no.png"> NO</span>
                 <span>+47</span>
               </button>
-              <button type="button" class="country-option" data-code="PL" data-prefix="+48" data-flag="🇵🇱">
-                <span>🇵🇱 PL</span>
+              <button type="button" class="country-option" data-code="PL" data-prefix="+48" data-flag-src="https://flagcdn.com/w40/pl.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/pl.png"> PL</span>
                 <span>+48</span>
               </button>
-              <button type="button" class="country-option" data-code="PT" data-prefix="+351" data-flag="🇵🇹">
-                <span>🇵🇹 PT</span>
+              <button type="button" class="country-option" data-code="PT" data-prefix="+351" data-flag-src="https://flagcdn.com/w40/pt.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/pt.png"> PT</span>
                 <span>+351</span>
               </button>
-              <button type="button" class="country-option" data-code="RU" data-prefix="+7" data-flag="🇷🇺">
-                <span>🇷🇺 RU</span>
+              <button type="button" class="country-option" data-code="RU" data-prefix="+7" data-flag-src="https://flagcdn.com/w40/ru.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/ru.png"> RU</span>
                 <span>+7</span>
               </button>
-              <button type="button" class="country-option" data-code="KR" data-prefix="+82" data-flag="🇰🇷">
-                <span>🇰🇷 KR</span>
+              <button type="button" class="country-option" data-code="KR" data-prefix="+82" data-flag-src="https://flagcdn.com/w40/kr.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/kr.png"> KR</span>
                 <span>+82</span>
               </button>
-              <button type="button" class="country-option" data-code="ES" data-prefix="+34" data-flag="🇪🇸">
-                <span>🇪🇸 ES</span>
+              <button type="button" class="country-option" data-code="ES" data-prefix="+34" data-flag-src="https://flagcdn.com/w40/es.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/es.png"> ES</span>
                 <span>+34</span>
               </button>
-              <button type="button" class="country-option" data-code="SE" data-prefix="+46" data-flag="🇸🇪">
-                <span>🇸🇪 SE</span>
+              <button type="button" class="country-option" data-code="SE" data-prefix="+46" data-flag-src="https://flagcdn.com/w40/se.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/se.png"> SE</span>
                 <span>+46</span>
               </button>
-              <button type="button" class="country-option" data-code="CH" data-prefix="+41" data-flag="🇨🇭">
-                <span>🇨🇭 CH</span>
+              <button type="button" class="country-option" data-code="CH" data-prefix="+41" data-flag-src="https://flagcdn.com/w40/ch.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/ch.png"> CH</span>
                 <span>+41</span>
               </button>
-              <button type="button" class="country-option" data-code="GB" data-prefix="+44" data-flag="🇬🇧">
-                <span>🇬🇧 GB</span>
+              <button type="button" class="country-option" data-code="GB" data-prefix="+44" data-flag-src="https://flagcdn.com/w40/gb.png">
+                <span><img class="country-flag" src="https://flagcdn.com/w40/gb.png"> GB</span>
                 <span>+44</span>
               </button>
+            </div>
             </div>
 
             <small class="input-hint">We'll send a verification code via SMS</small>
