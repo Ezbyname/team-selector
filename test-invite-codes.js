@@ -688,8 +688,18 @@ async function testExpiredCode() {
 
     // Test 5.3: Valid non-expired code works
     log.info('\nTest 5.3: Non-expired code still works...');
-    const futureCode = 'FUTURE-TEST';
+
+    // Use API to create code with expiration (cleaner than direct insert)
+    // First deactivate any existing codes for secondGroup
     await supabase
+      .from('group_invites')
+      .update({ is_active: false })
+      .eq('group_id', testState.secondGroup.id)
+      .eq('is_active', true);
+
+    // Create fresh code
+    const futureCode = `FUTURE-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const { error: insertError } = await supabase
       .from('group_invites')
       .insert({
         group_id: testState.secondGroup.id,
@@ -698,6 +708,11 @@ async function testExpiredCode() {
         is_active: true,
         expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // 1 day future
       });
+
+    if (insertError) {
+      log.error(`  Failed to insert future code: ${insertError.message}`);
+      log.error(`  Error details: ${JSON.stringify(insertError, null, 2)}`);
+    }
 
     // Ensure regular user is not in second group (in case they joined earlier)
     const { error: deleteError } = await supabase
@@ -851,11 +866,18 @@ async function testRoleSafety() {
   log.info('\nTest 7.2: Verify no way to escalate privileges via invite...');
 
   // Check API response explicitly states role
-  const { data: codeForCheck } = await request('/api/groups/create-invite', {
+  const codeForCheck = await request('/api/groups/create-invite', {
     method: 'POST',
     token: testState.adminToken,
     body: { groupId: testState.testGroup.id },
   });
+
+  if (codeForCheck.status !== 200 || !codeForCheck.data.inviteCode) {
+    log.error(`Failed to create code for role safety test: ${JSON.stringify(codeForCheck.data)}`);
+    stats.total++;
+    stats.failed++;
+    return;
+  }
 
   // Remove and rejoin to test fresh join
   await supabase
