@@ -86,11 +86,16 @@ export default async function handler(req, res) {
     }
 
     // Deactivate any existing active codes for this team
-    await supabase
+    const { error: deactivateError } = await supabase
       .from('group_invites')
       .update({ is_active: false })
       .eq('group_id', groupId)
       .eq('is_active', true);
+
+    if (deactivateError) {
+      console.error('Error deactivating old codes:', deactivateError);
+      // Continue anyway - this is non-critical
+    }
 
     // Generate new code
     let inviteCode;
@@ -114,8 +119,12 @@ export default async function handler(req, res) {
 
       if (!error) {
         created = true;
-      } else if (!error.message.includes('duplicate')) {
+      } else if (error.message && error.message.includes('duplicate')) {
+        // Duplicate code, try again
+        console.log(`Duplicate code generated (${inviteCode}), trying again...`);
+      } else {
         // Real error, not just duplicate
+        console.error('Error inserting invite code:', error);
         throw error;
       }
 
@@ -123,6 +132,7 @@ export default async function handler(req, res) {
     }
 
     if (!created) {
+      console.error('Failed to generate unique code after 5 attempts');
       return res.status(500).json({ error: 'Failed to generate unique code' });
     }
 
@@ -133,6 +143,10 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Error creating invite code:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('Error details:', JSON.stringify(error, null, 2));
+    return res.status(500).json({
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 }

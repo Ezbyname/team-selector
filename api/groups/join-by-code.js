@@ -58,7 +58,7 @@ export default async function handler(req, res) {
     // Normalize code (uppercase, trim)
     const normalizedCode = code.toUpperCase().trim();
 
-    // Find invite by code
+    // Find invite by code (CRITICAL: only active codes)
     const { data: invite, error: inviteError } = await supabase
       .from('group_invites')
       .select(`
@@ -75,21 +75,25 @@ export default async function handler(req, res) {
         )
       `)
       .eq('code', normalizedCode)
+      .eq('is_active', true)
       .single();
 
+    // CRITICAL: Validate invite code exists
     if (inviteError || !invite) {
       return res.status(404).json({ error: 'This invite code is invalid.' });
     }
 
-    // Check if code is active
+    // CRITICAL: Double-check is_active (defense in depth)
     if (!invite.is_active) {
       return res.status(403).json({ error: 'This invite code is no longer active.' });
     }
 
-    // Check if code is expired
+    // CRITICAL: Check if code is expired
     if (invite.expires_at) {
       const expiresAt = new Date(invite.expires_at);
-      if (expiresAt < new Date()) {
+      const now = new Date();
+
+      if (expiresAt < now) {
         // Deactivate expired code
         await supabase
           .from('group_invites')
@@ -100,6 +104,7 @@ export default async function handler(req, res) {
       }
     }
 
+    // CRITICAL: Validate group exists
     const group = invite.groups;
     if (!group) {
       return res.status(404).json({ error: 'Team not found.' });

@@ -71,20 +71,27 @@ export default async function handler(req, res) {
     }
 
     // Deactivate all active codes for this team
-    const { error: updateError } = await supabase
+    const { data: updatedRows, error: updateError } = await supabase
       .from('group_invites')
       .update({ is_active: false })
       .eq('group_id', groupId)
-      .eq('is_active', true);
+      .eq('is_active', true)
+      .select();
 
     if (updateError) {
       console.error('Error revoking invite codes:', updateError);
-      return res.status(500).json({ error: 'Failed to revoke invite codes' });
+      console.error('Update error details:', JSON.stringify(updateError, null, 2));
+      return res.status(500).json({
+        error: 'Failed to revoke invite codes',
+        details: process.env.NODE_ENV === 'development' ? updateError.message : undefined
+      });
     }
 
+    // Success even if no codes to revoke (idempotent)
     return res.status(200).json({
       success: true,
-      message: 'All invite codes revoked successfully'
+      message: 'All invite codes revoked successfully',
+      revokedCount: updatedRows?.length || 0
     });
 
   } catch (error) {
