@@ -14,11 +14,35 @@
 
     .teams-header {
       max-width: 1000px;
-      margin: 0 auto 30px;
+      margin: 0 auto 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 20px;
+    }
+
+    .breadcrumb {
+      max-width: 1000px;
+      margin: 0 auto 20px;
+      color: white;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .breadcrumb a {
+      color: white;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .breadcrumb a:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
     }
 
     .back-button {
@@ -200,13 +224,22 @@
 </head>
 <body>
   <div class="teams-container">
+    <div class="breadcrumb">
+      <a href="/dashboard.html">Home</a> →
+      <a href="/sport-selection.html">Sports</a> →
+      <span id="breadcrumbSport"></span>
+    </div>
+
     <div class="teams-header">
-      <a href="/sport-selection.html" class="back-button">← Back to Sports</a>
-      <h1 class="sport-title">
+      <a href="/sport-selection.html" class="back-button">← Back</a>
+      <h1 class="sport-title" id="pageTitle">
         <span class="sport-icon-large" id="sportIcon"></span>
         <span id="sportName"></span>
       </h1>
-      <button class="create-team-button" onclick="createTeam()">+ Create Team</button>
+      <div class="header-actions">
+        <button class="create-team-button" onclick="createTeam()">+ Create Team</button>
+        <button class="create-team-button" style="background: rgba(255,255,255,0.9); color: #667eea;" onclick="joinTeam()">Join Team</button>
+      </div>
     </div>
 
     <div class="teams-content">
@@ -243,7 +276,8 @@
     };
 
     document.getElementById('sportIcon').textContent = sportConfig[sport].icon;
-    document.getElementById('sportName').textContent = sportConfig[sport].name;
+    document.getElementById('sportName').textContent = `Your ${sportConfig[sport].name} Teams`;
+    document.getElementById('breadcrumbSport').textContent = sportConfig[sport].name;
     document.getElementById('emptyMessage').textContent =
       `You are not in any ${sportConfig[sport].name.toLowerCase()} teams yet`;
 
@@ -330,7 +364,13 @@
       window.location.href = `/create-team.html?sport=${sport}`;
     }
 
+    function joinTeam() {
+      // TODO: Implement join team modal
+      alert('Join team feature coming soon!');
+    }
+
     window.createTeam = createTeam;
+    window.joinTeam = joinTeam;
 
     // Load teams on page load
     loadTeams();

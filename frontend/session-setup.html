@@ -283,10 +283,13 @@
     // Load initial data
     window.addEventListener('DOMContentLoaded', async () => {
       if (!currentGroupId) {
-        // Silently redirect to groups page if no group selected
-        window.location.href = '/groups.html';
+        // Silently redirect to dashboard if no group selected
+        window.location.href = '/dashboard.html';
         return;
       }
+
+      // Store last team for resume feature
+      localStorage.setItem('lastTeamId', currentGroupId);
 
       await loadGroup();
       await loadPlayers();

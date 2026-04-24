@@ -203,11 +203,11 @@ function showAuthScreen(screen) {
 }
 
 /**
- * Redirect to sport selection after successful auth
+ * Redirect to smart dashboard after successful auth
  */
 function showMainApp() {
-  // Redirect to sport selection page
-  window.location.href = '/sport-selection.html';
+  // Redirect to dashboard (handles resume/empty/sport selection logic)
+  window.location.href = '/dashboard.html';
 }
 
 /**

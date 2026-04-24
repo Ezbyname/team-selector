@@ -278,7 +278,7 @@
     // Check if already logged in
     const token = getToken();
     if (token) {
-      window.location.href = '/sport-selection.html';
+      window.location.href = '/dashboard.html';
     }
 
     // Elements
@@ -496,7 +496,7 @@
         }
 
         saveToken(data.accessToken);
-        window.location.href = '/sport-selection.html';
+        window.location.href = '/dashboard.html';
       } catch (error) {
         showError('Network error. Please try again.');
         submitBtn.disabled = false;
@@ -531,7 +531,7 @@
         }
 
         saveToken(data.accessToken);
-        window.location.href = '/sport-selection.html';
+        window.location.href = '/dashboard.html';
       } catch (error) {
         showError('Network error. Please try again.');
         submitBtn.disabled = false;

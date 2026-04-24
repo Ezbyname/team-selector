@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Team Selector</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .dashboard-container {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dashboard-card {
+      background: white;
+      border-radius: 20px;
+      padding: 50px 40px;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+
+    .logout-link {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      opacity: 0.9;
+      transition: opacity 0.2s;
+    }
+
+    .logout-link:hover {
+      opacity: 1;
+    }
+
+    .welcome-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .welcome-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #333;
+      margin: 0 0 15px;
+    }
+
+    .welcome-subtitle {
+      font-size: 16px;
+      color: #666;
+      margin: 0 0 40px;
+      line-height: 1.6;
+    }
+
+    /* Resume card */
+    .resume-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: transform 0.2s;
+      text-decoration: none;
+      display: block;
+      color: white;
+    }
+
+    .resume-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .resume-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+
+    .resume-team {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .resume-icon {
+      font-size: 32px;
+    }
+
+    /* Action buttons */
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .primary-button, .secondary-button {
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+    }
+
+    .primary-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .primary-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .secondary-button {
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    .secondary-button:hover {
+      background: #e5e5e5;
+    }
+
+    .loading {
+      text-align: center;
+      color: #666;
+      font-size: 16px;
+    }
+
+    .loading-spinner {
+      font-size: 32px;
+      margin-bottom: 15px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 640px) {
+      .dashboard-card {
+        padding: 40px 30px;
+      }
+
+      .welcome-title {
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <a href="#" class="logout-link" onclick="event.preventDefault(); logout();">Logout</a>
+
+    <div class="dashboard-card">
+      <!-- Loading state -->
+      <div id="loadingState">
+        <div class="loading-spinner">⚽</div>
+        <div class="loading">Loading your teams...</div>
+      </div>
+
+      <!-- Resume last team -->
+      <div id="resumeState" style="display: none;">
+        <div class="welcome-icon">👋</div>
+        <h1 class="welcome-title">Welcome back!</h1>
+        <p class="welcome-subtitle">Continue where you left off?</p>
+
+        <a href="#" id="resumeTeamCard" class="resume-card">
+          <div class="resume-label">Last team</div>
+          <div class="resume-team">
+            <span id="resumeIcon"></span>
+            <span id="resumeTeamName"></span>
+          </div>
+        </a>
+
+        <div class="action-buttons">
+          <a href="/sport-selection.html" class="secondary-button">
+            Change Team
+          </a>
+        </div>
+      </div>
+
+      <!-- Empty state (no teams) -->
+      <div id="emptyState" style="display: none;">
+        <div class="welcome-icon">👋</div>
+        <h1 class="welcome-title">Welcome!</h1>
+        <p class="welcome-subtitle">
+          You are not part of any team yet.<br>
+          Create your first team or join an existing one.
+        </p>
+
+        <div class="action-buttons">
+          <a href="/sport-selection.html" class="primary-button">
+            Create Your First Team
+          </a>
+          <button class="secondary-button" onclick="showJoinTeam()">
+            Join a Team
+          </button>
+        </div>
+      </div>
+
+      <!-- Simple case: single team -->
+      <div id="simpleState" style="display: none;">
+        <div class="loading-spinner">🏀</div>
+        <div class="loading">Loading your team...</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Check authentication
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+      window.location.href = '/login.html';
+    }
+
+    const sportConfig = {
+      basketball: { icon: '🏀', name: 'Basketball' },
+      soccer: { icon: '⚽', name: 'Football' }
+    };
+
+    async function loadDashboard() {
+      try {
+        // Get all user's teams
+        const response = await fetch('/api/groups/my-teams-all', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+            return;
+          }
+          throw new Error('Failed to load teams');
+        }
+
+        const data = await response.json();
+        decideFlow(data);
+
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+        document.getElementById('loadingState').innerHTML = `
+          <div class="welcome-icon">⚠️</div>
+          <div class="loading">Error loading teams. Please refresh the page.</div>
+        `;
+      }
+    }
+
+    function decideFlow(data) {
+      const { teams, totalTeams, teamsBySport } = data;
+
+      // Hide loading
+      document.getElementById('loadingState').style.display = 'none';
+
+      // Case 1: No teams at all → Empty state
+      if (totalTeams === 0) {
+        document.getElementById('emptyState').style.display = 'block';
+        return;
+      }
+
+      // Case 2: Single team → Go directly to it
+      if (totalTeams === 1) {
+        document.getElementById('simpleState').style.display = 'block';
+        const team = teams[0];
+        setTimeout(() => {
+          window.location.href = `/session-setup.html?groupId=${team.id}`;
+        }, 500);
+        return;
+      }
+
+      // Case 3: Multiple teams → Check for last team
+      const lastTeamId = localStorage.getItem('lastTeamId');
+      const lastTeam = teams.find(t => t.id === lastTeamId);
+
+      if (lastTeam) {
+        // Show resume card
+        showResumeCard(lastTeam);
+      } else {
+        // Multiple teams, no recent → Check if single sport
+        const hasBothSports = teamsBySport.basketball.length > 0 && teamsBySport.soccer.length > 0;
+
+        if (!hasBothSports) {
+          // Single sport → Go to that sport's teams
+          const sport = teamsBySport.basketball.length > 0 ? 'basketball' : 'soccer';
+          window.location.href = `/my-teams.html?sport=${sport}`;
+        } else {
+          // Multiple sports → Show sport selection
+          window.location.href = '/sport-selection.html';
+        }
+      }
+    }
+
+    function showResumeCard(team) {
+      const resumeState = document.getElementById('resumeState');
+      const resumeIcon = document.getElementById('resumeIcon');
+      const resumeTeamName = document.getElementById('resumeTeamName');
+      const resumeTeamCard = document.getElementById('resumeTeamCard');
+
+      resumeIcon.textContent = sportConfig[team.sport].icon;
+      resumeTeamName.textContent = team.name;
+      resumeTeamCard.href = `/session-setup.html?groupId=${team.id}`;
+
+      resumeState.style.display = 'block';
+    }
+
+    function showJoinTeam() {
+      // TODO: Implement join team modal
+      alert('Join team feature coming soon!');
+    }
+
+    function logout() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      localStorage.removeItem('lastTeamId');
+      window.location.href = '/login.html';
+    }
+
+    window.showJoinTeam = showJoinTeam;
+    window.logout = logout;
+
+    // Load dashboard
+    loadDashboard();
+  </script>
+</body>
+</html>
