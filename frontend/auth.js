@@ -203,35 +203,11 @@ function showAuthScreen(screen) {
 }
 
 /**
- * Show main application (after successful auth)
+ * Redirect to sport selection after successful auth
  */
 function showMainApp() {
-  // Hide auth container
-  const authContainer = document.getElementById('authContainer');
-  if (authContainer) {
-    authContainer.style.display = 'none';
-  }
-
-  // Show main app
-  document.getElementById('mainContainer').style.display = 'block';
-
-  // Show user menu
-  const userMenu = document.getElementById('userMenu');
-  if (userMenu) {
-    userMenu.style.display = 'block';
-  }
-
-  // Update user display
-  const userDisplay = document.getElementById('userDisplay');
-  if (userDisplay && authState.user) {
-    userDisplay.textContent = authState.user.displayName || authState.user.phone;
-  }
-
-  // Show header
-  const header = document.getElementById('header');
-  if (header) {
-    header.style.display = 'flex';
-  }
+  // Redirect to sport selection page
+  window.location.href = '/sport-selection.html';
 }
 
 /**

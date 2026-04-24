@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Select Sport - Team Selector</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .sport-selection-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .sport-header {
+      padding: 20px;
+      text-align: center;
+      color: white;
+    }
+
+    .sport-header h1 {
+      margin: 0;
+      font-size: 32px;
+      font-weight: 700;
+    }
+
+    .sport-header p {
+      margin: 10px 0 0;
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .sport-cards {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      gap: 30px;
+      flex-wrap: wrap;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .sport-card {
+      background: white;
+      border-radius: 20px;
+      padding: 50px 40px;
+      width: 280px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .sport-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .sport-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .sport-name {
+      font-size: 28px;
+      font-weight: 700;
+      color: #333;
+      margin: 0;
+    }
+
+    .sport-description {
+      font-size: 14px;
+      color: #666;
+      margin: 10px 0 0;
+    }
+
+    .logout-link {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      opacity: 0.9;
+      transition: opacity 0.2s;
+    }
+
+    .logout-link:hover {
+      opacity: 1;
+    }
+
+    @media (max-width: 640px) {
+      .sport-cards {
+        flex-direction: column;
+        padding: 20px;
+      }
+
+      .sport-card {
+        width: 100%;
+        max-width: 320px;
+      }
+
+      .sport-header h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sport-selection-container">
+    <a href="#" class="logout-link" onclick="event.preventDefault(); logout();">Logout</a>
+
+    <div class="sport-header">
+      <h1>Select Sport</h1>
+      <p>Choose a sport to view your teams</p>
+    </div>
+
+    <div class="sport-cards">
+      <a href="/my-teams.html?sport=basketball" class="sport-card">
+        <span class="sport-icon">🏀</span>
+        <h2 class="sport-name">Basketball</h2>
+        <p class="sport-description">View your basketball teams</p>
+      </a>
+
+      <a href="/my-teams.html?sport=soccer" class="sport-card">
+        <span class="sport-icon">⚽</span>
+        <h2 class="sport-name">Football</h2>
+        <p class="sport-description">View your football teams</p>
+      </a>
+    </div>
+  </div>
+
+  <script type="module">
+    // Check authentication
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+      window.location.href = '/login.html';
+    }
+
+    function logout() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      window.location.href = '/login.html';
+    }
+
+    window.logout = logout;
+  </script>
+</body>
+</html>

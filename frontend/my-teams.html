@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Teams - Team Selector</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .teams-container {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+    }
+
+    .teams-header {
+      max-width: 1000px;
+      margin: 0 auto 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .back-button {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      text-decoration: none;
+      display: inline-block;
+      transition: background 0.2s;
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .sport-title {
+      color: white;
+      margin: 0;
+      font-size: 32px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .sport-icon-large {
+      font-size: 40px;
+    }
+
+    .create-team-button {
+      background: white;
+      color: #667eea;
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .create-team-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .teams-content {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .teams-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .team-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .team-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .team-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .team-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: #333;
+      margin: 0;
+    }
+
+    .team-role-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .role-admin {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .role-sub-admin {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .role-user {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .team-stats {
+      display: flex;
+      gap: 20px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .team-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .empty-state {
+      background: white;
+      border-radius: 16px;
+      padding: 60px 40px;
+      text-align: center;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .empty-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #333;
+      margin: 0 0 10px;
+    }
+
+    .empty-description {
+      font-size: 16px;
+      color: #666;
+      margin: 0 0 30px;
+    }
+
+    .loading {
+      text-align: center;
+      color: white;
+      font-size: 18px;
+      padding: 40px;
+    }
+
+    @media (max-width: 768px) {
+      .teams-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .sport-title {
+        font-size: 24px;
+      }
+
+      .teams-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="teams-container">
+    <div class="teams-header">
+      <a href="/sport-selection.html" class="back-button">← Back to Sports</a>
+      <h1 class="sport-title">
+        <span class="sport-icon-large" id="sportIcon"></span>
+        <span id="sportName"></span>
+      </h1>
+      <button class="create-team-button" onclick="createTeam()">+ Create Team</button>
+    </div>
+
+    <div class="teams-content">
+      <div id="loadingState" class="loading">Loading your teams...</div>
+      <div id="teamsList" class="teams-list" style="display: none;"></div>
+      <div id="emptyState" class="empty-state" style="display: none;">
+        <div class="empty-icon">🏟️</div>
+        <h2 class="empty-title">No teams yet</h2>
+        <p class="empty-description" id="emptyMessage"></p>
+        <button class="create-team-button" onclick="createTeam()">Create New Team</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Check authentication
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+      window.location.href = '/login.html';
+    }
+
+    // Get sport from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const sport = urlParams.get('sport');
+
+    if (!sport || !['basketball', 'soccer'].includes(sport)) {
+      window.location.href = '/sport-selection.html';
+    }
+
+    // Set sport display
+    const sportConfig = {
+      basketball: { icon: '🏀', name: 'Basketball' },
+      soccer: { icon: '⚽', name: 'Football' }
+    };
+
+    document.getElementById('sportIcon').textContent = sportConfig[sport].icon;
+    document.getElementById('sportName').textContent = sportConfig[sport].name;
+    document.getElementById('emptyMessage').textContent =
+      `You are not in any ${sportConfig[sport].name.toLowerCase()} teams yet`;
+
+    // Load teams
+    async function loadTeams() {
+      try {
+        const response = await fetch('/api/groups/my-teams?sport=' + sport, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+            return;
+          }
+          throw new Error('Failed to load teams');
+        }
+
+        const data = await response.json();
+        displayTeams(data.teams || []);
+      } catch (error) {
+        console.error('Error loading teams:', error);
+        document.getElementById('loadingState').textContent =
+          'Error loading teams. Please refresh the page.';
+      }
+    }
+
+    function displayTeams(teams) {
+      const loadingState = document.getElementById('loadingState');
+      const teamsList = document.getElementById('teamsList');
+      const emptyState = document.getElementById('emptyState');
+
+      loadingState.style.display = 'none';
+
+      if (teams.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      teamsList.style.display = 'grid';
+      teamsList.innerHTML = teams.map(team => `
+        <a href="/session-setup.html?groupId=${team.id}" class="team-card">
+          <div class="team-card-header">
+            <h3 class="team-name">${escapeHtml(team.name)}</h3>
+            <span class="team-role-badge role-${team.role || 'user'}">
+              ${getRoleLabel(team.role)}
+            </span>
+          </div>
+          <div class="team-stats">
+            <span class="team-stat">
+              <span>👥</span>
+              <span>${team.memberCount || 0} members</span>
+            </span>
+            <span class="team-stat">
+              <span>📅</span>
+              <span>${team.sessionCount || 0} sessions</span>
+            </span>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    function getRoleLabel(role) {
+      const labels = {
+        'admin': 'Admin',
+        'sub_admin': 'Sub Admin',
+        'user': 'Member'
+      };
+      return labels[role] || 'Member';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function createTeam() {
+      // Redirect to create team page with sport prefilled
+      window.location.href = `/create-team.html?sport=${sport}`;
+    }
+
+    window.createTeam = createTeam;
+
+    // Load teams on page load
+    loadTeams();
+  </script>
+</body>
+</html>
