@@ -186,7 +186,17 @@ function addPlayer() {
     if (!name) return;
 
     if (state.players.some(p => p.name === name)) {
-        alert(state.language === 'he' ? 'השם כבר קיים' : 'Name already exists');
+        // Show inline error instead of alert
+        const input = document.getElementById('playerNameInput');
+        if (input) {
+            input.style.borderColor = '#ff4444';
+            input.placeholder = state.language === 'he' ? 'השם כבר קיים' : 'Name already exists';
+            input.value = '';
+            setTimeout(() => {
+                input.style.borderColor = '';
+                input.placeholder = state.language === 'he' ? 'שם שחקן' : 'Player name';
+            }, 2000);
+        }
         return;
     }
 

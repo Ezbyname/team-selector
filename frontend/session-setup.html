@@ -283,7 +283,7 @@
     // Load initial data
     window.addEventListener('DOMContentLoaded', async () => {
       if (!currentGroupId) {
-        alert('No group selected');
+        // Silently redirect to groups page if no group selected
         window.location.href = '/groups.html';
         return;
       }
