@@ -699,12 +699,16 @@ async function testExpiredCode() {
         expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // 1 day future
       });
 
-    // Remove regular user from second group
-    await supabase
+    // Ensure regular user is not in second group (in case they joined earlier)
+    const { error: deleteError } = await supabase
       .from('group_members')
       .delete()
       .eq('group_id', testState.secondGroup.id)
       .eq('user_id', testState.regularUser.id);
+
+    if (deleteError) {
+      log.info(`  No existing membership to delete (expected)`);
+    }
 
     const futureJoin = await request('/api/groups/join-by-code', {
       method: 'POST',
@@ -712,8 +716,21 @@ async function testExpiredCode() {
       body: { code: futureCode },
     });
 
-    assert(futureJoin.status === 200, 'Non-expired code works');
-    assert(futureJoin.data.group.id === testState.secondGroup.id, 'Joined correct group');
+    if (futureJoin.status !== 200) {
+      log.error(`  Non-expired join failed with status ${futureJoin.status}`);
+      log.error(`  Response: ${JSON.stringify(futureJoin.data, null, 2)}`);
+    }
+
+    assert(futureJoin.status === 200, `Non-expired code works (got ${futureJoin.status})`);
+
+    // Safely check response structure
+    if (futureJoin.status === 200) {
+      assert(futureJoin.data.success === true, 'Join response has success=true');
+      assert(futureJoin.data.group !== undefined, 'Response includes group object');
+      if (futureJoin.data.group) {
+        assert(futureJoin.data.group.id === testState.secondGroup.id, 'Joined correct group');
+      }
+    }
 
     // Clean up
     await supabase.from('group_invites').delete().eq('code', futureCode);
