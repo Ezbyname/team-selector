@@ -241,9 +241,8 @@ function showMainApp() {
  */
 async function sendOTP() {
   const phoneInput = document.getElementById('phoneInput');
-  const countrySelect = document.getElementById('countrySelect');
   const phone = phoneInput.value.trim();
-  const countryCode = countrySelect ? countrySelect.value : '+972';
+  const countryCode = authState.countryCode || '+972';
 
   if (!phone) {
     showError('phoneScreen', 'Please enter phone number');
@@ -320,8 +319,7 @@ async function verifyOTP() {
   clearError('otpScreen');
 
   try {
-    const countrySelect = document.getElementById('countrySelect');
-    const countryCode = countrySelect ? countrySelect.value : '+972';
+    const countryCode = authState.countryCode || '+972';
 
     const response = await fetch(`${API_BASE_URL}/verify-otp`, {
       method: 'POST',
@@ -408,8 +406,7 @@ async function registerUser() {
   clearError('registerScreen');
 
   try {
-    const countrySelect = document.getElementById('countrySelect');
-    const countryCode = countrySelect ? countrySelect.value : '+972';
+    const countryCode = authState.countryCode || '+972';
 
     const response = await fetch(`${API_BASE_URL}/register`, {
       method: 'POST',
@@ -464,8 +461,7 @@ async function loginUser() {
   clearError('loginScreen');
 
   try {
-    const countrySelect = document.getElementById('countrySelect');
-    const countryCode = countrySelect ? countrySelect.value : '+972';
+    const countryCode = authState.countryCode || '+972';
 
     const response = await fetch(`${API_BASE_URL}/login`, {
       method: 'POST',
