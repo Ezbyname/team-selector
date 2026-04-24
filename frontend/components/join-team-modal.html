@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Team Modal</title>
+  <style>
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Modal container */
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      max-width: 450px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.show .modal {
+      transform: scale(1);
+    }
+
+    /* Modal header */
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin: 0;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: #666;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
+    }
+
+    .close-btn:hover {
+      background-color: #f5f5f5;
+    }
+
+    /* Modal body */
+    .modal-body {
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: monospace;
+    }
+
+    .form-input:focus {
+      border-color: #2563eb;
+    }
+
+    .form-input.error {
+      border-color: #ef4444;
+      background-color: #fef2f2;
+    }
+
+    .helper-text {
+      font-size: 13px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .error-message {
+      font-size: 13px;
+      color: #ef4444;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    /* Modal footer */
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 500;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-secondary {
+      background-color: #f5f5f5;
+      color: #666;
+    }
+
+    .btn-secondary:hover {
+      background-color: #e0e0e0;
+    }
+
+    .btn-primary {
+      background-color: #2563eb;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #1d4ed8;
+    }
+
+    .btn-primary:disabled {
+      background-color: #93c5fd;
+      cursor: not-allowed;
+    }
+
+    .btn-loading {
+      pointer-events: none;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: none;
+    }
+
+    .btn-loading .spinner {
+      display: block;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Success state */
+    .success-content {
+      display: none;
+      text-align: center;
+    }
+
+    .success-content.show {
+      display: block;
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background-color: #10b981;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .success-icon svg {
+      width: 32px;
+      height: 32px;
+      color: white;
+    }
+
+    .success-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .success-message {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 640px) {
+      .modal {
+        padding: 24px;
+        max-width: 95%;
+      }
+
+      .modal-title {
+        font-size: 20px;
+      }
+
+      .modal-footer {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Modal Structure (to be inserted via JS) -->
+  <template id="join-team-modal-template">
+    <div class="modal-overlay" id="joinTeamModal">
+      <div class="modal">
+        <!-- Form content -->
+        <div id="formContent">
+          <div class="modal-header">
+            <h2 class="modal-title">Join Team</h2>
+            <button class="close-btn" id="closeModal" aria-label="Close">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label" for="inviteCode">Invite Code</label>
+              <input
+                type="text"
+                id="inviteCode"
+                class="form-input"
+                placeholder="ATLIT-4829"
+                maxlength="20"
+                autocomplete="off"
+              >
+              <div class="helper-text">Ask your team admin for the team code.</div>
+              <div class="error-message" id="errorMessage"></div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+            <button class="btn btn-primary" id="joinBtn">
+              <span class="spinner"></span>
+              <span id="joinBtnText">Join Team</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Success content -->
+        <div class="success-content" id="successContent">
+          <div class="success-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <h3 class="success-title">Successfully Joined!</h3>
+          <p class="success-message" id="successMessage">You are now a member of <strong id="teamNameSuccess"></strong></p>
+          <button class="btn btn-primary" id="openTeamBtn">Open Team</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script type="module">
+    // Join Team Modal Controller
+    class JoinTeamModal {
+      constructor() {
+        this.modal = null;
+        this.overlay = null;
+        this.onSuccess = null;
+        this.joinedTeamId = null;
+
+        this.init();
+      }
+
+      init() {
+        // Create modal from template
+        const template = document.getElementById('join-team-modal-template');
+        const modalElement = template.content.cloneNode(true);
+        document.body.appendChild(modalElement);
+
+        this.modal = document.getElementById('joinTeamModal');
+        this.overlay = this.modal;
+
+        // Bind event listeners
+        this.bindEvents();
+      }
+
+      bindEvents() {
+        // Close buttons
+        document.getElementById('closeModal').addEventListener('click', () => this.close());
+        document.getElementById('cancelBtn').addEventListener('click', () => this.close());
+
+        // Close on overlay click
+        this.overlay.addEventListener('click', (e) => {
+          if (e.target === this.overlay) this.close();
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && this.overlay.classList.contains('show')) {
+            this.close();
+          }
+        });
+
+        // Join button
+        document.getElementById('joinBtn').addEventListener('click', () => this.handleJoin());
+
+        // Enter key on input
+        document.getElementById('inviteCode').addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') this.handleJoin();
+        });
+
+        // Clear error on input
+        document.getElementById('inviteCode').addEventListener('input', () => {
+          this.clearError();
+        });
+
+        // Open team button (success state)
+        document.getElementById('openTeamBtn').addEventListener('click', () => {
+          if (this.joinedTeamId) {
+            window.location.href = `/session-setup.html?groupId=${this.joinedTeamId}`;
+          }
+        });
+      }
+
+      open(onSuccessCallback) {
+        this.onSuccess = onSuccessCallback;
+        this.overlay.classList.add('show');
+        document.getElementById('formContent').style.display = 'block';
+        document.getElementById('successContent').classList.remove('show');
+        document.getElementById('inviteCode').value = '';
+        this.clearError();
+
+        // Focus input
+        setTimeout(() => {
+          document.getElementById('inviteCode').focus();
+        }, 300);
+      }
+
+      close() {
+        this.overlay.classList.remove('show');
+        this.clearError();
+      }
+
+      showError(message) {
+        const input = document.getElementById('inviteCode');
+        const errorMessage = document.getElementById('errorMessage');
+
+        input.classList.add('error');
+        errorMessage.textContent = message;
+        errorMessage.classList.add('show');
+      }
+
+      clearError() {
+        const input = document.getElementById('inviteCode');
+        const errorMessage = document.getElementById('errorMessage');
+
+        input.classList.remove('error');
+        errorMessage.classList.remove('show');
+      }
+
+      setLoading(loading) {
+        const joinBtn = document.getElementById('joinBtn');
+        const joinBtnText = document.getElementById('joinBtnText');
+
+        if (loading) {
+          joinBtn.classList.add('btn-loading');
+          joinBtn.disabled = true;
+          joinBtnText.textContent = 'Joining...';
+        } else {
+          joinBtn.classList.remove('btn-loading');
+          joinBtn.disabled = false;
+          joinBtnText.textContent = 'Join Team';
+        }
+      }
+
+      showSuccess(teamName, teamId) {
+        this.joinedTeamId = teamId;
+        document.getElementById('teamNameSuccess').textContent = teamName;
+        document.getElementById('formContent').style.display = 'none';
+        document.getElementById('successContent').classList.add('show');
+      }
+
+      async handleJoin() {
+        const codeInput = document.getElementById('inviteCode');
+        const code = codeInput.value.trim();
+
+        if (!code) {
+          this.showError('Please enter an invite code');
+          return;
+        }
+
+        this.clearError();
+        this.setLoading(true);
+
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            window.location.href = '/login.html';
+            return;
+          }
+
+          const response = await fetch('/api/groups/join-by-code', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ code })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            this.showError(data.error || 'Failed to join team');
+            this.setLoading(false);
+            return;
+          }
+
+          // Success!
+          this.showSuccess(data.group.name, data.group.id);
+
+          // Call success callback if provided
+          if (this.onSuccess) {
+            this.onSuccess(data);
+          }
+
+        } catch (error) {
+          console.error('Error joining team:', error);
+          this.showError('Network error. Please try again.');
+          this.setLoading(false);
+        }
+      }
+    }
+
+    // Initialize and expose globally
+    window.joinTeamModal = new JoinTeamModal();
+  </script>
+</body>
+</html>

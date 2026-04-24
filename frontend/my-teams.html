@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Teams - Team Selector</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="/components/join-team-modal.html" type="module"></script>
   <style>
     .teams-container {
       min-height: 100vh;
@@ -224,6 +225,9 @@
 </head>
 <body>
   <div class="teams-container">
+    <!-- Include join team modal -->
+    <div id="joinTeamModalContainer"></div>
+
     <div class="breadcrumb">
       <a href="/dashboard.html">Home</a> →
       <a href="/sport-selection.html">Sports</a> →
@@ -255,6 +259,26 @@
   </div>
 
   <script type="module">
+    // Load join team modal
+    fetch('/components/join-team-modal.html')
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const template = doc.getElementById('join-team-modal-template');
+        const script = doc.querySelector('script[type="module"]');
+
+        if (template) {
+          document.getElementById('joinTeamModalContainer').appendChild(template.content.cloneNode(true));
+        }
+        if (script) {
+          const newScript = document.createElement('script');
+          newScript.type = 'module';
+          newScript.textContent = script.textContent;
+          document.body.appendChild(newScript);
+        }
+      });
+
     // Check authentication
     const accessToken = localStorage.getItem('accessToken');
     if (!accessToken) {
@@ -365,8 +389,12 @@
     }
 
     function joinTeam() {
-      // TODO: Implement join team modal
-      alert('Join team feature coming soon!');
+      if (window.joinTeamModal) {
+        window.joinTeamModal.open((data) => {
+          // Success - reload teams list to show the new team
+          loadTeams();
+        });
+      }
     }
 
     window.createTeam = createTeam;
