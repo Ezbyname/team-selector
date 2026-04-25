@@ -27,8 +27,14 @@ function generateInviteCode(teamName) {
     .replace(/[^A-Z]/g, '')
     .substring(0, 6);
 
-  // Generate random 4-character suffix
-  const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+  // SECURITY: Exclude ambiguous characters to prevent user confusion
+  // Excluded: 0 (zero), O (letter O), 1 (one), I (letter I), L (letter L)
+  const safeChars = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+
+  let suffix = '';
+  for (let i = 0; i < 4; i++) {
+    suffix += safeChars[Math.floor(Math.random() * safeChars.length)];
+  }
 
   return `${prefix}-${suffix}`;
 }
@@ -63,7 +69,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    const userId = decoded.userId;
+    const userId = decoded.sub;
     const { groupId } = req.body;
 
     if (!groupId) {

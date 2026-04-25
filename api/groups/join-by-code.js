@@ -7,6 +7,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
+import { checkRateLimit } from '../../lib/rate-limit.js';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
@@ -48,11 +49,21 @@ export default async function handler(req, res) {
       return res.status(401).json({ success: false, error: 'Invalid token' });
     }
 
-    const userId = decoded.userId;
+    const userId = decoded.sub;
     const { code } = req.body;
 
     if (!code) {
       return res.status(400).json({ success: false, error: 'Invite code required' });
+    }
+
+    // SECURITY: Rate limiting to prevent brute-force code enumeration
+    const rateLimit = await checkRateLimit(userId, 5, 60000); // 5 attempts per minute
+    if (!rateLimit.allowed) {
+      return res.status(429).json({
+        success: false,
+        error: 'Too many attempts. Please try again later.',
+        retryAfter: rateLimit.retryAfter
+      });
     }
 
     // Normalize code (uppercase, trim)
@@ -131,13 +142,19 @@ export default async function handler(req, res) {
 
     if (existingMembership) {
       if (existingMembership.status === 'active') {
-        return res.status(409).json({
-          success: false,
-          error: 'You are already a member of this team.',
+        // IDEMPOTENT: Return success if already member (better UX)
+        return res.status(200).json({
+          success: true,
+          alreadyMember: true,
+          message: 'You are already a member of this team.',
           group: {
             id: group.id,
             name: group.name,
             sport: group.sport
+          },
+          membership: {
+            role: existingMembership.role,
+            status: existingMembership.status
           }
         });
       } else {
@@ -185,6 +202,39 @@ export default async function handler(req, res) {
       .single();
 
     if (membershipError) {
+      // CONCURRENCY SAFETY: Check if error is due to unique constraint (race condition)
+      // If concurrent request already created membership, treat as success (idempotent)
+      if (membershipError.code === '23505' || membershipError.message?.includes('unique')) {
+        // Unique constraint violation - membership was created by concurrent request
+        // Re-check membership to return success with existing data
+        const { data: existingCheck } = await supabase
+          .from('group_members')
+          .select('id, role, status')
+          .eq('group_id', group.id)
+          .eq('user_id', userId)
+          .eq('status', 'active')
+          .single();
+
+        if (existingCheck) {
+          // Concurrent insert succeeded, return idempotent success
+          return res.status(200).json({
+            success: true,
+            alreadyMember: true,
+            message: 'You are already a member of this team.',
+            group: {
+              id: group.id,
+              name: group.name,
+              sport: group.sport
+            },
+            membership: {
+              role: existingCheck.role,
+              status: existingCheck.status
+            }
+          });
+        }
+      }
+
+      // Real error, not a race condition
       console.error('Error creating membership:', membershipError);
       return res.status(500).json({ success: false, error: 'Failed to join team' });
     }

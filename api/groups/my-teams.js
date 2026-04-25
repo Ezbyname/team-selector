@@ -46,7 +46,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    const userId = decoded.userId;
+    const userId = decoded.sub;
 
     // Get sport filter from query
     const sport = req.query.sport;
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Failed to load teams' });
     }
 
-    // Get teams where user is a member
+    // Get teams where user is a member (only active memberships)
     const { data: memberships, error: memberError } = await supabase
       .from('group_members')
       .select(`
@@ -81,7 +81,8 @@ export default async function handler(req, res) {
           created_by
         )
       `)
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .eq('status', 'active');
 
     if (memberError) {
       console.error('Error fetching memberships:', memberError);
@@ -117,11 +118,12 @@ export default async function handler(req, res) {
     // Get member counts and session counts for each team
     const teamsWithStats = await Promise.all(
       allTeams.map(async (team) => {
-        // Get member count
+        // Get member count (only active members)
         const { count: memberCount } = await supabase
           .from('group_members')
           .select('*', { count: 'exact', head: true })
-          .eq('group_id', team.id);
+          .eq('group_id', team.id)
+          .eq('status', 'active');
 
         // Get session count
         const { count: sessionCount } = await supabase

@@ -48,7 +48,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    const userId = decoded.userId;
+    const userId = decoded.sub;
     const { groupId } = req.body;
 
     if (!groupId) {

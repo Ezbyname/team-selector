@@ -206,9 +206,9 @@ if (!authHeader || !authHeader.startsWith('Bearer ')) {
 
 ---
 
-## Rule 6: Duplicate Membership Prevention
+## Rule 6: Duplicate Membership Prevention (IDEMPOTENT)
 
-### Check Before Creating
+### Join is Idempotent - Always Returns Success
 
 ```javascript
 const existingMembership = await supabase
@@ -220,10 +220,13 @@ const existingMembership = await supabase
 
 if (existingMembership) {
   if (existingMembership.status === 'active') {
-    return res.status(409).json({
-      success: false,
-      error: "You are already a member of this team.",
-      group: { ... }  // Include group details for UX
+    // IDEMPOTENT: Return success, not error
+    return res.status(200).json({
+      success: true,
+      alreadyMember: true,
+      message: "You are already a member of this team.",
+      group: { ... },
+      membership: { role: ..., status: ... }
     });
   } else {
     // Reactivate removed membership
@@ -232,9 +235,13 @@ if (existingMembership) {
 }
 ```
 
-**Status Code:** `409 Conflict` for duplicate membership
+**Status Code:** `200 OK` with `alreadyMember: true` flag
 
-**WHY:** Prevents duplicate rows, maintains data integrity.
+**WHY:** 
+- Better UX - joining multiple times is not an error
+- Frontend doesn't need special error handling
+- User can click invite link repeatedly without confusion
+- Idempotent operations are easier to reason about
 
 ---
 
@@ -539,6 +546,146 @@ Must pass before deploy.
 | Response consistency | ✅ | 🟡 Important |
 | Schema integrity | ✅ | 🔴 YES |
 | Audit trail | ✅ | 🟡 Important |
+| Admin exit prevention | ✅ | 🔴 YES |
+| Membership status | ✅ | 🔴 YES |
+
+---
+
+## Rule 16: Admin Exit Prevention
+
+### Admin Cannot Leave If Sole Admin
+
+**Rule:**
+```javascript
+// Check if user is sole admin before allowing leave
+if (membership.role === 'admin') {
+  const { data: admins } = await supabase
+    .from('group_members')
+    .select('id, user_id')
+    .eq('group_id', groupId)
+    .eq('role', 'admin')
+    .eq('status', 'active');
+
+  if (admins.length === 1) {
+    return res.status(403).json({
+      success: false,
+      error: 'Cannot leave - you are the only admin. Transfer ownership first.'
+    });
+  }
+}
+```
+
+**Why:** Teams must never be left without an active admin. This prevents organizational deadlock.
+
+**Workflow:**
+1. Admin must transfer ownership to another member first
+2. Then admin can leave the team
+3. This ensures continuity of team management
+
+---
+
+## Rule 17: Membership Status (Never Delete)
+
+### Use Status Field Instead of DELETE
+
+**Statuses:**
+- `active` - Current member with full access
+- `resigned` - User left the team voluntarily
+- `removed` - User was removed by admin
+
+**Implementation:**
+```javascript
+// CORRECT: Set status to resigned
+await supabase
+  .from('group_members')
+  .update({ status: 'resigned' })
+  .eq('id', membershipId);
+
+// WRONG: Delete membership
+await supabase
+  .from('group_members')
+  .delete()
+  .eq('id', membershipId);  // ❌ NEVER DO THIS
+```
+
+**Query Safety:**
+ALL queries that list active members MUST filter by `status = 'active'`:
+
+```javascript
+// CORRECT: Only active members
+const { data: members } = await supabase
+  .from('group_members')
+  .select('*')
+  .eq('group_id', groupId)
+  .eq('status', 'active');  // ✅ ALWAYS INCLUDE
+
+// WRONG: Shows resigned/removed members
+const { data: members } = await supabase
+  .from('group_members')
+  .select('*')
+  .eq('group_id', groupId);  // ❌ MISSING STATUS FILTER
+```
+
+**Applies to:**
+- My teams list (`/api/groups/my-teams`, `/api/groups/my-teams-all`)
+- Team member lists
+- Permission checks
+- Role validation
+- Session roster
+- All membership queries
+
+**Why:**
+- Preserves audit history
+- Allows rejoining via invite code
+- Enables analytics and debugging
+- Prevents data loss
+
+---
+
+## System Guarantees
+
+### Invariants (Always True)
+
+1. **One Active Code Per Group**
+   - Enforced by partial unique index: `unique_active_code_per_group`
+   - Multiple inactive codes allowed (history)
+   - Creating new code auto-deactivates old codes
+
+2. **Role Safety**
+   - Joining via invite ALWAYS creates `role='user'`
+   - Never `admin` or `sub_admin` via invite
+   - Only explicit admin action can elevate roles
+
+3. **Admin Continuity**
+   - Team always has at least one active admin
+   - Sole admin cannot leave without transferring ownership
+   - Enforced at API level (403 response)
+
+4. **Membership Persistence**
+   - Memberships are NEVER deleted
+   - Status transitions: `active` → `resigned` | `removed`
+   - Enables audit trail and re-join workflows
+
+5. **Status Code Semantics**
+   - 404: Resource doesn't exist (invalid code)
+   - 403: Resource exists but access denied (revoked/expired code, admin exit blocked)
+   - 409: Conflict (deprecated - now using idempotent 200)
+   - 429: Rate limit exceeded
+
+6. **Idempotent Operations**
+   - Joining same team twice returns 200 with `alreadyMember: true`
+   - Revoking when no codes exist returns 200 with `revokedCount: 0`
+   - Better UX than error responses
+
+7. **Query Safety**
+   - All active member queries filter by `status='active'`
+   - Resigned/removed members excluded from lists
+   - Inactive members cannot use team features
+
+8. **Rate Limiting**
+   - Join-by-code: 5 attempts per minute per user
+   - Returns 429 with `retryAfter` seconds
+   - Prevents brute-force code enumeration
 
 ---
 

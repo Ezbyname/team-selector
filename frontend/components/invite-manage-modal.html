@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Team Invites</title>
+  <style>
+    /* Modal overlay */
+    .invite-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .invite-modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Modal container */
+    .invite-modal {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .invite-modal-overlay.show .invite-modal {
+      transform: scale(1);
+    }
+
+    /* Modal header */
+    .invite-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .invite-modal-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin: 0;
+    }
+
+    .invite-close-btn {
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: #666;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
+    }
+
+    .invite-close-btn:hover {
+      background-color: #f5f5f5;
+    }
+
+    /* Modal body */
+    .invite-modal-body {
+      margin-bottom: 24px;
+    }
+
+    .invite-section {
+      margin-bottom: 24px;
+    }
+
+    .invite-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .invite-code-display {
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-align: center;
+      color: #1f2937;
+      margin-bottom: 12px;
+    }
+
+    .invite-link-display {
+      background: #eff6ff;
+      border: 2px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 14px;
+      color: #1e40af;
+      word-break: break-all;
+      margin-bottom: 12px;
+    }
+
+    .invite-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .invite-btn {
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .invite-btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .invite-btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .invite-btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .invite-btn-secondary:hover {
+      background: #e5e7eb;
+    }
+
+    .invite-btn-danger {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+      grid-column: 1 / -1;
+    }
+
+    .invite-btn-danger:hover {
+      background: #fee2e2;
+    }
+
+    .invite-btn-success {
+      background: #10b981;
+      color: white;
+      grid-column: 1 / -1;
+    }
+
+    .invite-btn-success:hover {
+      background: #059669;
+    }
+
+    .invite-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .invite-helper-text {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 8px;
+    }
+
+    .invite-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1f2937;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      z-index: 2000;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .invite-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      display: none;
+    }
+
+    .loading-overlay.show {
+      display: flex;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 640px) {
+      .invite-modal {
+        padding: 24px;
+        max-width: 95%;
+      }
+
+      .invite-modal-title {
+        font-size: 20px;
+      }
+
+      .invite-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .invite-btn-danger,
+      .invite-btn-success {
+        grid-column: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Modal Template -->
+  <template id="invite-manage-modal-template">
+    <div class="invite-modal-overlay" id="inviteManageModal">
+      <div class="invite-modal" style="position: relative;">
+        <div class="loading-overlay" id="inviteLoading">
+          <div class="spinner"></div>
+        </div>
+
+        <div class="invite-modal-header">
+          <h2 class="invite-modal-title">Manage Team Invites</h2>
+          <button class="invite-close-btn" id="inviteCloseBtn">&times;</button>
+        </div>
+
+        <div class="invite-modal-body">
+          <!-- Invite Code Section -->
+          <div class="invite-section">
+            <label class="invite-label">Invite Code</label>
+            <div class="invite-code-display" id="inviteCodeDisplay">LOADING...</div>
+            <p class="invite-helper-text">Share this code with players</p>
+          </div>
+
+          <!-- Invite Link Section -->
+          <div class="invite-section">
+            <label class="invite-label">Invite Link</label>
+            <div class="invite-link-display" id="inviteLinkDisplay">Loading...</div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="invite-actions">
+            <button class="invite-btn invite-btn-primary" id="copyCodeBtn">
+              📋 Copy Code
+            </button>
+            <button class="invite-btn invite-btn-primary" id="copyLinkBtn">
+              🔗 Copy Link
+            </button>
+            <button class="invite-btn invite-btn-success" id="shareBtn">
+              📤 Share
+            </button>
+            <button class="invite-btn invite-btn-secondary" id="regenerateBtn">
+              🔄 Regenerate Code
+            </button>
+            <button class="invite-btn invite-btn-danger" id="revokeBtn">
+              🚫 Revoke Code
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="invite-toast" id="inviteToast">Copied!</div>
+  </template>
+
+  <script type="module">
+    class InviteManageModal {
+      constructor() {
+        this.modal = null;
+        this.overlay = null;
+        this.groupId = null;
+        this.inviteCode = null;
+        this.teamName = null;
+
+        this.init();
+      }
+
+      init() {
+        // Create modal from template
+        const template = document.getElementById('invite-manage-modal-template');
+        const modalElement = template.content.cloneNode(true);
+        document.body.appendChild(modalElement);
+
+        this.modal = document.getElementById('inviteManageModal');
+        this.overlay = this.modal;
+
+        this.bindEvents();
+      }
+
+      bindEvents() {
+        // Close button
+        document.getElementById('inviteCloseBtn').addEventListener('click', () => this.close());
+
+        // Close on overlay click
+        this.overlay.addEventListener('click', (e) => {
+          if (e.target === this.overlay) this.close();
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && this.overlay.classList.contains('show')) {
+            this.close();
+          }
+        });
+
+        // Action buttons
+        document.getElementById('copyCodeBtn').addEventListener('click', () => this.copyCode());
+        document.getElementById('copyLinkBtn').addEventListener('click', () => this.copyLink());
+        document.getElementById('shareBtn').addEventListener('click', () => this.share());
+        document.getElementById('regenerateBtn').addEventListener('click', () => this.regenerate());
+        document.getElementById('revokeBtn').addEventListener('click', () => this.revoke());
+      }
+
+      async open(groupId, teamName) {
+        this.groupId = groupId;
+        this.teamName = teamName;
+        this.overlay.classList.add('show');
+
+        // Fetch current invite code
+        await this.fetchInviteCode();
+      }
+
+      close() {
+        this.overlay.classList.remove('show');
+      }
+
+      async fetchInviteCode() {
+        this.setLoading(true);
+
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch('/api/groups/create-invite', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ groupId: this.groupId })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            this.showToast('Failed to load invite code', true);
+            this.close();
+            return;
+          }
+
+          this.inviteCode = data.inviteCode;
+          this.updateDisplay();
+        } catch (error) {
+          console.error('Error fetching invite code:', error);
+          this.showToast('Network error', true);
+          this.close();
+        } finally {
+          this.setLoading(false);
+        }
+      }
+
+      updateDisplay() {
+        const appOrigin = window.location.origin;
+        const inviteLink = `${appOrigin}/join/${this.inviteCode}`;
+
+        document.getElementById('inviteCodeDisplay').textContent = this.inviteCode;
+        document.getElementById('inviteLinkDisplay').textContent = inviteLink;
+      }
+
+      async copyCode() {
+        try {
+          await navigator.clipboard.writeText(this.inviteCode);
+          this.showToast('Code copied to clipboard!');
+        } catch (error) {
+          console.error('Failed to copy code:', error);
+          this.showToast('Failed to copy', true);
+        }
+      }
+
+      async copyLink() {
+        const appOrigin = window.location.origin;
+        const inviteLink = `${appOrigin}/join/${this.inviteCode}`;
+
+        try {
+          await navigator.clipboard.writeText(inviteLink);
+          this.showToast('Link copied to clipboard!');
+        } catch (error) {
+          console.error('Failed to copy link:', error);
+          this.showToast('Failed to copy', true);
+        }
+      }
+
+      async share() {
+        const appOrigin = window.location.origin;
+        const inviteLink = `${appOrigin}/join/${this.inviteCode}`;
+
+        // Check if Web Share API is available
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: `Join ${this.teamName}`,
+              text: `Join my team on Team Selector`,
+              url: inviteLink
+            });
+            this.showToast('Shared successfully!');
+          } catch (error) {
+            // User cancelled share or error occurred
+            if (error.name !== 'AbortError') {
+              console.error('Error sharing:', error);
+              // Fallback to copy
+              await this.copyLink();
+            }
+          }
+        } else {
+          // Fallback: copy link to clipboard
+          await this.copyLink();
+        }
+      }
+
+      async regenerate() {
+        if (!confirm('Regenerate invite code? The old code will be revoked.')) {
+          return;
+        }
+
+        await this.fetchInviteCode();
+        this.showToast('New code generated!');
+      }
+
+      async revoke() {
+        if (!confirm('Revoke invite code? No one will be able to join with this code.')) {
+          return;
+        }
+
+        this.setLoading(true);
+
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch('/api/groups/revoke-invite', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ groupId: this.groupId })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            this.showToast('Failed to revoke code', true);
+            return;
+          }
+
+          this.showToast('Code revoked successfully');
+          this.close();
+        } catch (error) {
+          console.error('Error revoking code:', error);
+          this.showToast('Network error', true);
+        } finally {
+          this.setLoading(false);
+        }
+      }
+
+      setLoading(loading) {
+        const loadingOverlay = document.getElementById('inviteLoading');
+        if (loading) {
+          loadingOverlay.classList.add('show');
+        } else {
+          loadingOverlay.classList.remove('show');
+        }
+      }
+
+      showToast(message, isError = false) {
+        const toast = document.getElementById('inviteToast');
+        toast.textContent = message;
+        toast.style.background = isError ? '#dc2626' : '#1f2937';
+        toast.classList.add('show');
+
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 3000);
+      }
+    }
+
+    // Initialize and expose globally
+    window.inviteManageModal = new InviteManageModal();
+  </script>
+</body>
+</html>

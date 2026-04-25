@@ -764,7 +764,7 @@ async function testDuplicateMembership() {
   log.title('TEST SUITE 6: Duplicate Membership Prevention');
   console.log('Testing duplicate join attempts\n');
 
-  // Test 6.1: User joins same team twice
+  // Test 6.1: User joins same team twice (idempotent)
   log.info('Test 6.1: User tries to join same team again...');
 
   // Create new invite code since old one was revoked
@@ -783,13 +783,16 @@ async function testDuplicateMembership() {
   });
 
   assertJSON(duplicateJoin, 'Duplicate join response returns JSON');
-  assert(duplicateJoin.status === 409, `Duplicate join rejected with 409 (got ${duplicateJoin.status})`);
-  assert(duplicateJoin.data.error !== undefined, 'Error message returned');
+  assert(duplicateJoin.status === 200, `Join is idempotent, returns 200 (got ${duplicateJoin.status})`);
+  assert(duplicateJoin.data.success === true, 'Response has success=true');
+  assert(duplicateJoin.data.alreadyMember === true, 'Response includes alreadyMember flag');
+  assert(duplicateJoin.data.message !== undefined, 'Message returned');
   assert(
-    duplicateJoin.data.error === 'You are already a member of this team.',
-    `Error message matches spec (got: "${duplicateJoin.data.error}")`
+    duplicateJoin.data.message === 'You are already a member of this team.',
+    `Message matches spec (got: "${duplicateJoin.data.message}")`
   );
-  assert(duplicateJoin.data.group !== undefined, 'Response includes group details for UX');
+  assert(duplicateJoin.data.group !== undefined, 'Response includes group details');
+  assert(duplicateJoin.data.membership !== undefined, 'Response includes membership details');
 
   // Test 6.2: No duplicate membership created
   log.info('\nTest 6.2: Verify no duplicate membership in database...');

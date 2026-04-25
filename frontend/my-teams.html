@@ -207,6 +207,34 @@
       padding: 40px;
     }
 
+    .team-card-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .team-invite-btn {
+      background: rgba(37, 99, 235, 0.1);
+      border: 2px solid rgba(37, 99, 235, 0.3);
+      color: #2563eb;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .team-invite-btn:hover {
+      background: rgba(37, 99, 235, 0.2);
+      border-color: rgba(37, 99, 235, 0.5);
+      transform: translateY(-2px);
+    }
+
     @media (max-width: 768px) {
       .teams-header {
         flex-direction: column;
@@ -227,6 +255,8 @@
   <div class="teams-container">
     <!-- Include join team modal -->
     <div id="joinTeamModalContainer"></div>
+    <!-- Include invite manage modal -->
+    <div id="inviteManageModalContainer"></div>
 
     <div class="breadcrumb">
       <a href="/dashboard.html">Home</a> →
@@ -270,6 +300,26 @@
 
         if (template) {
           document.getElementById('joinTeamModalContainer').appendChild(template.content.cloneNode(true));
+        }
+        if (script) {
+          const newScript = document.createElement('script');
+          newScript.type = 'module';
+          newScript.textContent = script.textContent;
+          document.body.appendChild(newScript);
+        }
+      });
+
+    // Load invite manage modal
+    fetch('/components/invite-manage-modal.html')
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const template = doc.getElementById('invite-manage-modal-template');
+        const script = doc.querySelector('script[type="module"]');
+
+        if (template) {
+          document.getElementById('inviteManageModalContainer').appendChild(template.content.cloneNode(true));
         }
         if (script) {
           const newScript = document.createElement('script');
@@ -347,24 +397,31 @@
 
       teamsList.style.display = 'grid';
       teamsList.innerHTML = teams.map(team => `
-        <a href="/session-setup.html?groupId=${team.id}" class="team-card">
-          <div class="team-card-header">
-            <h3 class="team-name">${escapeHtml(team.name)}</h3>
-            <span class="team-role-badge role-${team.role || 'user'}">
-              ${getRoleLabel(team.role)}
-            </span>
-          </div>
-          <div class="team-stats">
-            <span class="team-stat">
-              <span>👥</span>
-              <span>${team.memberCount || 0} members</span>
-            </span>
-            <span class="team-stat">
-              <span>📅</span>
-              <span>${team.sessionCount || 0} sessions</span>
-            </span>
-          </div>
-        </a>
+        <div class="team-card-wrapper">
+          <a href="/session-setup.html?groupId=${team.id}" class="team-card">
+            <div class="team-card-header">
+              <h3 class="team-name">${escapeHtml(team.name)}</h3>
+              <span class="team-role-badge role-${team.role || 'user'}">
+                ${getRoleLabel(team.role)}
+              </span>
+            </div>
+            <div class="team-stats">
+              <span class="team-stat">
+                <span>👥</span>
+                <span>${team.memberCount || 0} members</span>
+              </span>
+              <span class="team-stat">
+                <span>📅</span>
+                <span>${team.sessionCount || 0} sessions</span>
+              </span>
+            </div>
+          </a>
+          ${team.role === 'admin' ? `
+            <button class="team-invite-btn" onclick="event.stopPropagation(); manageInvites('${team.id}', '${escapeHtml(team.name)}')">
+              📤 Manage Invites
+            </button>
+          ` : ''}
+        </div>
       `).join('');
     }
 
@@ -397,8 +454,15 @@
       }
     }
 
+    function manageInvites(groupId, teamName) {
+      if (window.inviteManageModal) {
+        window.inviteManageModal.open(groupId, teamName);
+      }
+    }
+
     window.createTeam = createTeam;
     window.joinTeam = joinTeam;
+    window.manageInvites = manageInvites;
 
     // Load teams on page load
     loadTeams();

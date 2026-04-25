@@ -278,6 +278,13 @@
     // Check if already logged in
     const token = getToken();
     if (token) {
+      // Check for pending invite code redirect
+      const pendingInviteCode = sessionStorage.getItem('pendingInviteCode');
+      if (pendingInviteCode) {
+        sessionStorage.removeItem('pendingInviteCode');
+        window.location.href = `/join/${pendingInviteCode}`;
+        return;
+      }
       window.location.href = '/dashboard.html';
     }
 
@@ -496,6 +503,13 @@
         }
 
         saveToken(data.accessToken);
+        // Check for pending invite code redirect
+        const pendingInviteCode = sessionStorage.getItem('pendingInviteCode');
+        if (pendingInviteCode) {
+          sessionStorage.removeItem('pendingInviteCode');
+          window.location.href = `/join/${pendingInviteCode}`;
+          return;
+        }
         window.location.href = '/dashboard.html';
       } catch (error) {
         showError('Network error. Please try again.');
@@ -531,6 +545,13 @@
         }
 
         saveToken(data.accessToken);
+        // Check for pending invite code redirect
+        const pendingInviteCode = sessionStorage.getItem('pendingInviteCode');
+        if (pendingInviteCode) {
+          sessionStorage.removeItem('pendingInviteCode');
+          window.location.href = `/join/${pendingInviteCode}`;
+          return;
+        }
         window.location.href = '/dashboard.html';
       } catch (error) {
         showError('Network error. Please try again.');

@@ -893,6 +893,21 @@ async function testConcurrentOperations() {
   // Test 8.2: Concurrent joins with same code
   log.info('\nTest 8.2: Multiple users joining with same code concurrently...');
 
+  // Create a fresh invite code for concurrent join test
+  // (Previous test deactivated testState.validCode)
+  const freshCodeResponse = await request('/api/groups/create-invite', {
+    method: 'POST',
+    token: testState.adminToken,
+    body: { groupId: testState.testGroup.id },
+  });
+
+  if (freshCodeResponse.status !== 200 || !freshCodeResponse.data.inviteCode) {
+    throw new Error('Failed to create fresh invite code for concurrent join test');
+  }
+
+  const concurrentTestCode = freshCodeResponse.data.inviteCode;
+  console.log(`  Using fresh code for concurrent joins: ${concurrentTestCode}`);
+
   // Create multiple test users
   const jwt = await import('jsonwebtoken');
   const userTokens = [];
@@ -919,16 +934,23 @@ async function testConcurrentOperations() {
     userTokens.push({ user, token });
   }
 
-  // All join concurrently
+  // All join concurrently with the SAME code
   const joinPromises = userTokens.map(({ token }) =>
     request('/api/groups/join-by-code', {
       method: 'POST',
       token,
-      body: { code: testState.validCode },
+      body: { code: concurrentTestCode },
     })
   );
 
   const joinResults = await Promise.all(joinPromises);
+
+  // DEBUG: Log all responses to understand what's happening
+  console.log('\n  DEBUG: Concurrent join results:');
+  joinResults.forEach((result, i) => {
+    console.log(`    User ${i}: status=${result.status}, data=${JSON.stringify(result.data)}`);
+  });
+
   const successfulJoins = joinResults.filter(r => r.status === 200);
 
   assert(

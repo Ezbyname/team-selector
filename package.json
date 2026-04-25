@@ -12,11 +12,17 @@
     "test:backend": "node --env-file=.env.local test-backend.js",
     "test:invite-codes": "node --env-file=.env.local test-invite-codes.js",
     "test:invite-codes-api": "node --env-file=.env.local test-invite-codes-api.js",
-    "test:integration": "npm run validate:env && npm run test:backend && npm run test:invite-codes && npm run test:invite-codes-api",
+    "test:leave-transfer": "node --env-file=.env.local test-leave-transfer.js",
+    "test:invite-link": "node --env-file=.env.local test-invite-link.js",
+    "test:balancing": "node test-balancing.js",
+    "test:rate-limit-safety": "NODE_ENV=production node test-rate-limit-safety.js",
+    "validate:beta": "node --env-file=.env.local validate-beta-ready.js",
+    "test:integration": "npm run validate:env && npm run test:backend && npm run test:invite-codes && npm run test:invite-codes-api && npm run test:leave-transfer && npm run test:invite-link && npm run test:balancing",
     "test": "npm run test:unit && npm run test:integration"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
+    "@upstash/redis": "^1.34.3",
     "bcrypt": "^5.1.1",
     "jsonwebtoken": "^9.0.2",
     "twilio": "^4.19.0"
