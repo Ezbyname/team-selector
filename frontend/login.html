@@ -200,9 +200,9 @@
               <input
                 type="password"
                 id="registerPasswordInput"
-                placeholder="At least 8 characters"
+                placeholder="At least 4 characters"
                 autocomplete="new-password"
-                minlength="8"
+                minlength="4"
                 required
               />
               <button type="button" class="password-toggle" data-toggle="registerPasswordInput">
@@ -404,14 +404,14 @@
         // Check if user already exists
         if (data.userExists) {
           // Existing user - go directly to login
-          document.getElementById('loginPhoneDisplay').textContent = currentPhone;
+          document.getElementById('loginPhoneDisplay').textContent = `${currentCountryCode} ${currentPhone}`;
           showScreen('loginScreen');
           document.getElementById('loginPasswordInput').focus();
         } else {
-          // New user - go to OTP verification
-          document.getElementById('otpPhoneDisplay').textContent = currentPhone;
-          showScreen('otpScreen');
-          otpInput.focus();
+          // New user - go directly to registration (no OTP needed)
+          document.getElementById('registerPhoneDisplay').textContent = `${currentCountryCode} ${currentPhone}`;
+          showScreen('registerScreen');
+          document.getElementById('registerNameInput').focus();
         }
 
         submitBtn.disabled = false;
@@ -492,7 +492,7 @@
         const response = await fetch(`${API_BASE}/api/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: currentPhone, password, displayName: name })
+          body: JSON.stringify({ phone: currentPhone, countryCode: currentCountryCode, password, displayName: name })
         });
 
         const data = await response.json();
@@ -535,7 +535,7 @@
         const response = await fetch(`${API_BASE}/api/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: currentPhone, password })
+          body: JSON.stringify({ phone: currentPhone, countryCode: currentCountryCode, password })
         });
 
         const data = await response.json();
