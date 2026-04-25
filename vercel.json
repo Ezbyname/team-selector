@@ -8,6 +8,7 @@
     { "source": "/api/groups/(.*)", "destination": "/api/groups/index.js" },
     { "source": "/api/players/(.*)", "destination": "/api/players/index.js" },
     { "source": "/api/sessions/(.*)", "destination": "/api/sessions/index.js" },
+    { "source": "/api/connections/(.*)", "destination": "/api/connections/index.js" },
     { "source": "/join/:code", "destination": "/join.html" },
     { "source": "/", "destination": "/home.html" }
   ]

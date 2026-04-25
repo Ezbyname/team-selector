@@ -2,11 +2,11 @@
  * Consolidated Admin Routes Handler
  */
 
-import createSubAdmin from './create-sub-admin.js';
-import revokeSubAdmin from './revoke-sub-admin.js';
-import grantGradingPermission from './grant-grading-permission.js';
-import revokeGradingPermission from './revoke-grading-permission.js';
-import users from './users.js';
+import createSubAdmin from '../../lib/api-handlers/admin/create-sub-admin.js';
+import revokeSubAdmin from '../../lib/api-handlers/admin/revoke-sub-admin.js';
+import grantGradingPermission from '../../lib/api-handlers/admin/grant-grading-permission.js';
+import revokeGradingPermission from '../../lib/api-handlers/admin/revoke-grading-permission.js';
+import users from '../../lib/api-handlers/admin/users.js';
 
 export default async function handler(req, res) {
   const path = req.url.split('?')[0];

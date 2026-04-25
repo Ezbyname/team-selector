@@ -3,12 +3,12 @@
  * Handles all /api/auth/* endpoints in one function
  */
 
-import sendOtp from './send-otp.js';
-import verifyOtp from './verify-otp.js';
-import register from './register.js';
-import login from './login.js';
-import refresh from './refresh.js';
-import logout from './logout.js';
+import sendOtp from '../../lib/api-handlers/auth/send-otp.js';
+import verifyOtp from '../../lib/api-handlers/auth/verify-otp.js';
+import register from '../../lib/api-handlers/auth/register.js';
+import login from '../../lib/api-handlers/auth/login.js';
+import refresh from '../../lib/api-handlers/auth/refresh.js';
+import logout from '../../lib/api-handlers/auth/logout.js';
 
 export default async function handler(req, res) {
   const path = req.url.split('?')[0];
