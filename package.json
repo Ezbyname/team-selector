@@ -16,6 +16,7 @@
     "test:invite-link": "node --env-file=.env.local test-invite-link.js",
     "test:balancing": "node test-balancing.js",
     "test:password-reset": "node test-password-reset.js",
+    "test:password-reset-complete": "node test-password-reset-complete.js",
     "test:rate-limit-safety": "NODE_ENV=production node test-rate-limit-safety.js",
     "validate:beta": "node --env-file=.env.local validate-beta-ready.js",
     "test:integration": "npm run validate:env && npm run test:backend && npm run test:invite-codes && npm run test:invite-codes-api && npm run test:leave-transfer && npm run test:invite-link && npm run test:balancing",

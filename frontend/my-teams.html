@@ -257,6 +257,8 @@
     <div id="joinTeamModalContainer"></div>
     <!-- Include invite manage modal -->
     <div id="inviteManageModalContainer"></div>
+    <!-- Include reset password modal -->
+    <div id="resetPasswordModalContainer"></div>
 
     <div class="breadcrumb">
       <a href="/dashboard.html">Home</a> →
@@ -320,6 +322,26 @@
 
         if (template) {
           document.getElementById('inviteManageModalContainer').appendChild(template.content.cloneNode(true));
+        }
+        if (script) {
+          const newScript = document.createElement('script');
+          newScript.type = 'module';
+          newScript.textContent = script.textContent;
+          document.body.appendChild(newScript);
+        }
+      });
+
+    // Load reset password modal
+    fetch('/components/reset-password-modal.html')
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const template = doc.getElementById('reset-password-modal-template');
+        const script = doc.querySelector('script[type="module"]');
+
+        if (template) {
+          document.getElementById('resetPasswordModalContainer').appendChild(template.content.cloneNode(true));
         }
         if (script) {
           const newScript = document.createElement('script');
@@ -420,6 +442,9 @@
             <button class="team-invite-btn" onclick="event.stopPropagation(); manageInvites('${team.id}', '${escapeHtml(team.name)}')">
               📤 Manage Invites
             </button>
+            <button class="team-invite-btn" style="background: rgba(220, 38, 38, 0.1); border-color: rgba(220, 38, 38, 0.3); color: #dc2626;" onclick="event.stopPropagation(); resetPlayerPassword('${team.id}', '${escapeHtml(team.name)}')">
+              🔐 Reset Player Password
+            </button>
           ` : ''}
         </div>
       `).join('');
@@ -457,6 +482,12 @@
     function manageInvites(groupId, teamName) {
       if (window.inviteManageModal) {
         window.inviteManageModal.open(groupId, teamName);
+      }
+    }
+
+    function resetPlayerPassword(groupId, teamName) {
+      if (window.resetPasswordModal) {
+        window.resetPasswordModal.open(groupId);
       }
     }
 
