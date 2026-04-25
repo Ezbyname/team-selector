@@ -260,7 +260,55 @@
           </div>
 
           <button type="submit" class="primary-btn">Login</button>
+          <button type="button" class="link-btn" onclick="window.location.href='/forgot-password.html'">Forgot password?</button>
           <button type="button" class="link-btn" id="useDifferentPhoneBtn">← Use different phone</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Set New Password Screen (After Admin Reset) -->
+    <section id="adminResetPasswordScreen" class="auth-screen">
+      <div class="auth-card">
+        <div class="auth-icon">🔐</div>
+        <h2 class="auth-title">Set New Password</h2>
+        <p class="auth-subtitle">Your password was reset by an admin. Please set a new password.</p>
+
+        <form class="auth-form" id="adminResetPasswordForm">
+          <div class="form-group">
+            <label for="adminResetNewPasswordInput">New Password</label>
+            <div class="password-wrapper">
+              <input
+                type="password"
+                id="adminResetNewPasswordInput"
+                placeholder="At least 4 characters"
+                autocomplete="new-password"
+                minlength="4"
+                required
+              />
+              <button type="button" class="password-toggle" data-toggle="adminResetNewPasswordInput">
+                👁️
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="adminResetConfirmPasswordInput">Confirm Password</label>
+            <div class="password-wrapper">
+              <input
+                type="password"
+                id="adminResetConfirmPasswordInput"
+                placeholder="Re-enter password"
+                autocomplete="new-password"
+                minlength="4"
+                required
+              />
+              <button type="button" class="password-toggle" data-toggle="adminResetConfirmPasswordInput">
+                👁️
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="primary-btn">Set Password & Login</button>
         </form>
       </div>
     </section>
@@ -403,10 +451,17 @@
 
         // Check if user already exists
         if (data.userExists) {
-          // Existing user - go directly to login
-          document.getElementById('loginPhoneDisplay').textContent = `${currentCountryCode} ${currentPhone}`;
-          showScreen('loginScreen');
-          document.getElementById('loginPasswordInput').focus();
+          // Check if password reset required (admin reset)
+          if (data.passwordResetRequired) {
+            // Show admin reset password screen
+            showScreen('adminResetPasswordScreen');
+            document.getElementById('adminResetNewPasswordInput').focus();
+          } else {
+            // Existing user - go directly to login
+            document.getElementById('loginPhoneDisplay').textContent = `${currentCountryCode} ${currentPhone}`;
+            showScreen('loginScreen');
+            document.getElementById('loginPasswordInput').focus();
+          }
         } else {
           // New user - go directly to registration (no OTP needed)
           document.getElementById('registerPhoneDisplay').textContent = `${currentCountryCode} ${currentPhone}`;
@@ -574,6 +629,58 @@
       showScreen('phoneScreen');
       document.getElementById('loginPasswordInput').value = '';
     });
+
+    // Admin reset password form
+    const adminResetPasswordForm = document.getElementById('adminResetPasswordForm');
+    if (adminResetPasswordForm) {
+      adminResetPasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newPassword = document.getElementById('adminResetNewPasswordInput').value;
+        const confirmPassword = document.getElementById('adminResetConfirmPasswordInput').value;
+
+        if (newPassword !== confirmPassword) {
+          showError('Passwords do not match');
+          return;
+        }
+
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Setting Password...';
+
+        try {
+          const response = await fetch(`${API_BASE}/api/auth/set-new-password-after-admin-reset`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: currentPhone, countryCode: currentCountryCode, newPassword })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            showError(data.error || 'Failed to set password');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            return;
+          }
+
+          saveToken(data.accessToken);
+          // Check for pending invite code redirect
+          const pendingInviteCode = sessionStorage.getItem('pendingInviteCode');
+          if (pendingInviteCode) {
+            sessionStorage.removeItem('pendingInviteCode');
+            window.location.href = `/join/${pendingInviteCode}`;
+            return;
+          }
+          window.location.href = '/my-teams.html';
+        } catch (error) {
+          console.error('API error:', error);
+          showError(`Network error: ${error.message || 'Connection failed'}. Check browser console for details.`);
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      });
+    }
 
     // Password visibility toggles
     document.querySelectorAll('.password-toggle').forEach(btn => {
