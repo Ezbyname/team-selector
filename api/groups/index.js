@@ -10,6 +10,7 @@ import leave from '../../lib/api-handlers/groups/leave.js';
 import list from '../../lib/api-handlers/groups/list.js';
 import myTeams from '../../lib/api-handlers/groups/my-teams.js';
 import myTeamsAll from '../../lib/api-handlers/groups/my-teams-all.js';
+import resetMemberPassword from '../../lib/api-handlers/groups/reset-member-password.js';
 import revokeInvite from '../../lib/api-handlers/groups/revoke-invite.js';
 import transferOwnership from '../../lib/api-handlers/groups/transfer-ownership.js';
 import update from '../../lib/api-handlers/groups/update.js';
@@ -41,6 +42,9 @@ export default async function handler(req, res) {
 
     case 'my-teams-all':
       return myTeamsAll(req, res);
+
+    case 'reset-member-password':
+      return resetMemberPassword(req, res);
 
     case 'revoke-invite':
       return revokeInvite(req, res);
