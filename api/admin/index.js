@@ -7,6 +7,8 @@ import revokeSubAdmin from '../../lib/api-handlers/admin/revoke-sub-admin.js';
 import grantGradingPermission from '../../lib/api-handlers/admin/grant-grading-permission.js';
 import revokeGradingPermission from '../../lib/api-handlers/admin/revoke-grading-permission.js';
 import users from '../../lib/api-handlers/admin/users.js';
+import supportRequests from '../../lib/api-handlers/admin/support-requests.js';
+import supportRequestsUpdateStatus from '../../lib/api-handlers/admin/support-requests-update-status.js';
 
 export default async function handler(req, res) {
   const path = req.url.split('?')[0];
@@ -21,6 +23,10 @@ export default async function handler(req, res) {
     return revokeGradingPermission(req, res);
   } else if (path.endsWith('/users')) {
     return users(req, res);
+  } else if (path.endsWith('/support-requests-update-status')) {
+    return supportRequestsUpdateStatus(req, res);
+  } else if (path.endsWith('/support-requests')) {
+    return supportRequests(req, res);
   }
 
   return res.status(404).json({ error: 'Not found' });

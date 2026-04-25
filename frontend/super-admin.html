@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Requests - Super Admin</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .admin-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .admin-header {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .admin-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      background: #667eea;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .back-btn:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .requests-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6b7280;
+    }
+
+    .loading-spinner {
+      font-size: 48px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6b7280;
+    }
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .request-item {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 20px 24px;
+      transition: background 0.2s;
+    }
+
+    .request-item:last-child {
+      border-bottom: none;
+    }
+
+    .request-item:hover {
+      background: #f9fafb;
+    }
+
+    .request-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 16px;
+    }
+
+    .request-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .request-time {
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .request-user {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 16px;
+    }
+
+    .request-phone {
+      font-size: 14px;
+      color: #6b7280;
+      font-family: monospace;
+    }
+
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-badge.new {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .status-badge.in_progress {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-badge.resolved {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-badge.closed {
+      background: #e5e7eb;
+      color: #6b7280;
+    }
+
+    .request-subject {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 8px;
+    }
+
+    .request-message {
+      color: #4b5563;
+      line-height: 1.6;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+    }
+
+    .request-context {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #eef2ff;
+      color: #4338ca;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .request-groups {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .group-tag {
+      padding: 4px 10px;
+      background: #f3f4f6;
+      color: #4b5563;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .request-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .action-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-btn.resolve {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .action-btn.resolve:hover {
+      background: #a7f3d0;
+    }
+
+    .action-btn.close {
+      background: #e5e7eb;
+      color: #6b7280;
+    }
+
+    .action-btn.close:hover {
+      background: #d1d5db;
+    }
+
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      background: #fee2e2;
+      border-left: 4px solid #dc2626;
+      padding: 16px;
+      margin: 20px;
+      border-radius: 8px;
+      color: #991b1b;
+    }
+
+    @media (max-width: 768px) {
+      .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .request-header {
+        flex-direction: column;
+      }
+
+      .request-actions {
+        flex-direction: column;
+      }
+
+      .action-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="admin-header">
+      <h1 class="admin-title">
+        <span>🆘</span>
+        Support Requests
+      </h1>
+      <a href="/dashboard.html" class="back-btn">← Dashboard</a>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-label">Total Requests</div>
+        <div class="stat-value" id="totalCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">New</div>
+        <div class="stat-value" id="newCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Resolved</div>
+        <div class="stat-value" id="resolvedCount">0</div>
+      </div>
+    </div>
+
+    <div class="requests-container">
+      <div id="loading" class="loading">
+        <div class="loading-spinner">⏳</div>
+        <p>Loading support requests...</p>
+      </div>
+
+      <div id="error" class="error-message" style="display: none;"></div>
+
+      <div id="emptyState" class="empty-state" style="display: none;">
+        <div class="empty-icon">📭</div>
+        <h3>No Support Requests</h3>
+        <p>All clear! No support requests at the moment.</p>
+      </div>
+
+      <div id="requestsList" style="display: none;"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getToken } from './lib/auth.js';
+
+    const API_BASE = window.location.origin;
+    let requests = [];
+
+    // Check authentication
+    const token = getToken();
+    if (!token) {
+      window.location.href = '/login.html';
+    }
+
+    // Load requests
+    loadSupportRequests();
+
+    async function loadSupportRequests() {
+      const loadingDiv = document.getElementById('loading');
+      const errorDiv = document.getElementById('error');
+      const emptyDiv = document.getElementById('emptyState');
+      const listDiv = document.getElementById('requestsList');
+
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/support-requests`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.status === 403) {
+          errorDiv.textContent = 'Access denied. Super admin only.';
+          errorDiv.style.display = 'block';
+          loadingDiv.style.display = 'none';
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error('Failed to load support requests');
+        }
+
+        const data = await response.json();
+        requests = data.requests || [];
+
+        loadingDiv.style.display = 'none';
+
+        if (requests.length === 0) {
+          emptyDiv.style.display = 'block';
+          updateStats();
+          return;
+        }
+
+        displayRequests(requests);
+        updateStats();
+
+      } catch (error) {
+        console.error('Error loading support requests:', error);
+        loadingDiv.style.display = 'none';
+        errorDiv.textContent = `Error: ${error.message}. Please refresh the page.`;
+        errorDiv.style.display = 'block';
+      }
+    }
+
+    function displayRequests(requests) {
+      const listDiv = document.getElementById('requestsList');
+      listDiv.style.display = 'block';
+
+      listDiv.innerHTML = requests.map(req => `
+        <div class="request-item">
+          <div class="request-header">
+            <div class="request-meta">
+              <div class="request-time">${formatTime(req.createdAt)}</div>
+              <div class="request-user">${escapeHtml(req.name)}</div>
+              <div class="request-phone">${escapeHtml(req.phone)}</div>
+            </div>
+            <span class="status-badge ${req.status}">${getStatusLabel(req.status)}</span>
+          </div>
+
+          ${req.context ? `
+            <div class="request-context">Context: ${escapeHtml(req.context)}</div>
+          ` : ''}
+
+          ${req.groups && req.groups.length > 0 ? `
+            <div class="request-groups">
+              ${req.groups.map(group => `
+                <span class="group-tag">📁 ${escapeHtml(group.name)}</span>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          <div class="request-subject">${escapeHtml(req.subject)}</div>
+          <div class="request-message">${escapeHtml(req.message)}</div>
+
+          ${req.status === 'new' || req.status === 'in_progress' ? `
+            <div class="request-actions">
+              <button
+                class="action-btn resolve"
+                onclick="updateStatus('${req.id}', 'resolved')"
+                ${req.status === 'resolved' ? 'disabled' : ''}
+              >
+                ✅ Mark Resolved
+              </button>
+              <button
+                class="action-btn close"
+                onclick="updateStatus('${req.id}', 'closed')"
+              >
+                ✖️ Close
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    function updateStats() {
+      const total = requests.length;
+      const newCount = requests.filter(r => r.status === 'new').length;
+      const resolvedCount = requests.filter(r => r.status === 'resolved' || r.status === 'closed').length;
+
+      document.getElementById('totalCount').textContent = total;
+      document.getElementById('newCount').textContent = newCount;
+      document.getElementById('resolvedCount').textContent = resolvedCount;
+    }
+
+    window.updateStatus = async function(id, status) {
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/support-requests-update-status`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ id, status })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update status');
+        }
+
+        // Reload requests
+        await loadSupportRequests();
+
+      } catch (error) {
+        console.error('Error updating status:', error);
+        alert(`Failed to update status: ${error.message}`);
+      }
+    }
+
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 60) {
+        return `${diffMins} minutes ago`;
+      } else if (diffHours < 24) {
+        return `${diffHours} hours ago`;
+      } else if (diffDays < 7) {
+        return `${diffDays} days ago`;
+      } else {
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+      }
+    }
+
+    function getStatusLabel(status) {
+      const labels = {
+        'new': 'New',
+        'in_progress': 'In Progress',
+        'resolved': 'Resolved',
+        'closed': 'Closed'
+      };
+      return labels[status] || status;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
