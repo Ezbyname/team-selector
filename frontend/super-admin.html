@@ -181,6 +181,26 @@
       background: #10b981;
     }
 
+    .whatsapp-btn {
+      padding: 4px 8px;
+      background: #25d366;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .whatsapp-btn:hover {
+      background: #1ea952;
+      transform: translateY(-1px);
+    }
+
     .status-badge {
       padding: 6px 12px;
       border-radius: 12px;
@@ -372,6 +392,7 @@
     const API_BASE = window.location.origin;
     let requests = [];
     let autoRefreshInterval = null;
+    let lastRequestCount = 0;
 
     // Check authentication
     const token = getToken();
@@ -386,6 +407,30 @@
     autoRefreshInterval = setInterval(() => {
       loadSupportRequests(true); // true = silent refresh
     }, 12000);
+
+    // Notification sound for new messages
+    function playNotificationSound() {
+      try {
+        // Create a subtle notification beep
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = 800; // Higher pitch for alert
+        oscillator.type = 'sine';
+
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.2);
+      } catch (error) {
+        console.log('Unable to play sound:', error);
+      }
+    }
 
     async function loadSupportRequests(silentRefresh = false) {
       const loadingDiv = document.getElementById('loading');
@@ -427,8 +472,10 @@
         const newRequests = data.requests || [];
 
         // Check if there are new messages
-        const hasNewMessages = newRequests.length > requests.length;
+        const newCount = requests.filter(r => r.status === 'new').length;
+        const hasNewMessages = silentRefresh && (newRequests.length > lastRequestCount);
 
+        lastRequestCount = newRequests.length;
         requests = newRequests;
         loadingDiv.style.display = 'none';
 
@@ -442,9 +489,28 @@
         displayRequests(requests);
         updateStats();
 
-        // Show subtle indicator for new messages (optional)
-        if (silentRefresh && hasNewMessages) {
-          document.title = `(${requests.filter(r => r.status === 'new').length}) Support Requests`;
+        // Show subtle indicator + sound for new messages
+        if (hasNewMessages) {
+          document.title = `(${newCount}) Support Requests`;
+          playNotificationSound();
+
+          // Flash browser tab if user is on different tab
+          if (document.hidden) {
+            const originalTitle = document.title;
+            let flashCount = 0;
+            const flashInterval = setInterval(() => {
+              document.title = flashCount % 2 === 0 ? '🔔 New Message!' : originalTitle;
+              flashCount++;
+              if (flashCount >= 6) {
+                clearInterval(flashInterval);
+                document.title = originalTitle;
+              }
+            }, 500);
+          }
+        } else if (newCount > 0) {
+          document.title = `(${newCount}) Support Requests`;
+        } else {
+          document.title = 'Support Requests';
         }
 
       } catch (error) {
@@ -476,6 +542,13 @@
                     title="Copy phone number"
                   >
                     Copy
+                  </button>
+                  <button
+                    class="whatsapp-btn"
+                    onclick="openWhatsApp('${escapeHtml(req.phone)}')"
+                    title="Open WhatsApp"
+                  >
+                    <span>💬</span> WhatsApp
                   </button>
                 ` : ''}
               </div>
@@ -574,6 +647,13 @@
         console.error('Failed to copy:', error);
         alert('Failed to copy phone number');
       }
+    }
+
+    window.openWhatsApp = function(phone) {
+      // Clean phone number (remove +, spaces, etc.)
+      const cleanPhone = phone.replace(/\D/g, '');
+      // Open WhatsApp web/app
+      window.open(`https://wa.me/${cleanPhone}`, '_blank');
     }
 
     function formatTime(timestamp) {
