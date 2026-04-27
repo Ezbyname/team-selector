@@ -10,7 +10,9 @@
     { "source": "/api/sessions/(.*)", "destination": "/api/sessions/index.js" },
     { "source": "/api/connections/(.*)", "destination": "/api/connections/index.js" },
     { "source": "/api/support/(.*)", "destination": "/api/support/index.js" },
-    { "source": "/join/:code", "destination": "/join.html" },
-    { "source": "/", "destination": "/login.html" }
+    { "source": "/join/:code", "destination": "/join.html" }
+  ],
+  "redirects": [
+    { "source": "/", "destination": "/login.html", "permanent": false }
   ]
 }
