@@ -10,7 +10,7 @@
 <body>
   <!-- Version Badge -->
   <div style="position: fixed; top: 10px; right: 10px; background: rgba(76, 175, 80, 0.9); color: white; padding: 6px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
-    v2.2.0.1 - Proper Redirect
+    v2.2.0.2 - Fix JS Error
   </div>
 
   <div class="auth-container">
@@ -336,10 +336,10 @@
       if (pendingInviteCode) {
         sessionStorage.removeItem('pendingInviteCode');
         window.location.href = `/join/${pendingInviteCode}`;
-        return;
+      } else {
+        window.location.href = '/dashboard.html';
       }
-      window.location.href = '/dashboard.html';
-    }
+    } else {
 
     // Elements
     const phoneForm = document.getElementById('phoneForm');
@@ -719,21 +719,22 @@
       });
     }
 
-    // Password visibility toggles
-    document.querySelectorAll('.password-toggle').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const inputId = btn.getAttribute('data-toggle');
-        const input = document.getElementById(inputId);
+      // Password visibility toggles
+      document.querySelectorAll('.password-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const inputId = btn.getAttribute('data-toggle');
+          const input = document.getElementById(inputId);
 
-        if (input.type === 'password') {
-          input.type = 'text';
-          btn.textContent = '🙈';
-        } else {
-          input.type = 'password';
-          btn.textContent = '👁️';
-        }
+          if (input.type === 'password') {
+            input.type = 'text';
+            btn.textContent = '🙈';
+          } else {
+            input.type = 'password';
+            btn.textContent = '👁️';
+          }
+        });
       });
-    });
+    }
   </script>
 </body>
 </html>
