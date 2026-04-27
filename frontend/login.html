@@ -10,7 +10,7 @@
 <body>
   <!-- Version Badge -->
   <div style="position: fixed; top: 10px; right: 10px; background: rgba(76, 175, 80, 0.9); color: white; padding: 6px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
-    v2.2.0.2 - Fix JS Error
+    v2.2.1 - Password 6 Chars
   </div>
 
   <div class="auth-container">
@@ -205,9 +205,9 @@
               <input
                 type="password"
                 id="registerPasswordInput"
-                placeholder="At least 4 characters"
+                placeholder="At least 6 characters"
                 autocomplete="new-password"
-                minlength="4"
+                minlength="6"
                 required
               />
               <button type="button" class="password-toggle" data-toggle="registerPasswordInput">
@@ -285,9 +285,9 @@
               <input
                 type="password"
                 id="adminResetNewPasswordInput"
-                placeholder="At least 4 characters"
+                placeholder="At least 6 characters"
                 autocomplete="new-password"
-                minlength="4"
+                minlength="6"
                 required
               />
               <button type="button" class="password-toggle" data-toggle="adminResetNewPasswordInput">
@@ -304,7 +304,7 @@
                 id="adminResetConfirmPasswordInput"
                 placeholder="Re-enter password"
                 autocomplete="new-password"
-                minlength="4"
+                minlength="6"
                 required
               />
               <button type="button" class="password-toggle" data-toggle="adminResetConfirmPasswordInput">
