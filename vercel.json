@@ -11,6 +11,6 @@
     { "source": "/api/connections/(.*)", "destination": "/api/connections/index.js" },
     { "source": "/api/support/(.*)", "destination": "/api/support/index.js" },
     { "source": "/join/:code", "destination": "/join.html" },
-    { "source": "/", "destination": "/home.html" }
+    { "source": "/", "destination": "/login.html" }
   ]
 }
