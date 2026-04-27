@@ -440,10 +440,22 @@
           body: JSON.stringify({ phone: currentPhone, countryCode: currentCountryCode })
         });
 
-        const data = await response.json();
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          console.error('Failed to parse response:', parseError);
+          showError('Server error. Please try again or contact support.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+          return;
+        }
 
         if (!response.ok) {
-          showError(data.error || 'Failed to send code');
+          // Show actual error from server
+          const errorMsg = data.error || data.message || `Server error (${response.status})`;
+          console.error('API error:', { status: response.status, data });
+          showError(errorMsg);
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
           return;
@@ -472,8 +484,13 @@
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
       } catch (error) {
-        console.error('API error:', error);
-        showError(`Network error: ${error.message || 'Connection failed'}. Check browser console for details.`);
+        console.error('Request failed:', error);
+        // Only show network error if it's actually a network error
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          showError('Cannot connect to server. Check your internet connection.');
+        } else {
+          showError(`Error: ${error.message}. Check console for details.`);
+        }
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
       }
@@ -519,8 +536,13 @@
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
       } catch (error) {
-        console.error('API error:', error);
-        showError(`Network error: ${error.message || 'Connection failed'}. Check browser console for details.`);
+        console.error('Request failed:', error);
+        // Only show network error if it's actually a network error
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          showError('Cannot connect to server. Check your internet connection.');
+        } else {
+          showError(`Error: ${error.message}. Check console for details.`);
+        }
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
       }
@@ -569,8 +591,13 @@
         }
         window.location.href = '/dashboard.html';
       } catch (error) {
-        console.error('API error:', error);
-        showError(`Network error: ${error.message || 'Connection failed'}. Check browser console for details.`);
+        console.error('Request failed:', error);
+        // Only show network error if it's actually a network error
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          showError('Cannot connect to server. Check your internet connection.');
+        } else {
+          showError(`Error: ${error.message}. Check console for details.`);
+        }
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
       }
@@ -612,8 +639,13 @@
         }
         window.location.href = '/dashboard.html';
       } catch (error) {
-        console.error('API error:', error);
-        showError(`Network error: ${error.message || 'Connection failed'}. Check browser console for details.`);
+        console.error('Request failed:', error);
+        // Only show network error if it's actually a network error
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          showError('Cannot connect to server. Check your internet connection.');
+        } else {
+          showError(`Error: ${error.message}. Check console for details.`);
+        }
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
       }
