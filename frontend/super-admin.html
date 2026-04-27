@@ -156,6 +156,29 @@
       font-size: 14px;
       color: #6b7280;
       font-family: monospace;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .copy-phone-btn {
+      padding: 4px 8px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-phone-btn:hover {
+      background: #5568d3;
+    }
+
+    .copy-phone-btn.copied {
+      background: #10b981;
     }
 
     .status-badge {
@@ -169,6 +192,12 @@
     .status-badge.new {
       background: #fee2e2;
       color: #991b1b;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
     }
 
     .status-badge.in_progress {
@@ -342,6 +371,7 @@
 
     const API_BASE = window.location.origin;
     let requests = [];
+    let autoRefreshInterval = null;
 
     // Check authentication
     const token = getToken();
@@ -349,14 +379,27 @@
       window.location.href = '/login.html';
     }
 
-    // Load requests
+    // Load requests initially
     loadSupportRequests();
 
-    async function loadSupportRequests() {
+    // Auto-refresh every 12 seconds
+    autoRefreshInterval = setInterval(() => {
+      loadSupportRequests(true); // true = silent refresh
+    }, 12000);
+
+    async function loadSupportRequests(silentRefresh = false) {
       const loadingDiv = document.getElementById('loading');
       const errorDiv = document.getElementById('error');
       const emptyDiv = document.getElementById('emptyState');
       const listDiv = document.getElementById('requestsList');
+
+      // Only show loading on initial load, not on auto-refresh
+      if (!silentRefresh) {
+        loadingDiv.style.display = 'block';
+        listDiv.style.display = 'none';
+        emptyDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+      }
 
       try {
         const response = await fetch(`${API_BASE}/api/admin/support-requests`, {
@@ -369,20 +412,29 @@
           errorDiv.textContent = 'Access denied. Super admin only.';
           errorDiv.style.display = 'block';
           loadingDiv.style.display = 'none';
+          // Stop auto-refresh on 403
+          if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+          }
           return;
         }
 
         if (!response.ok) {
-          throw new Error('Failed to load support requests');
+          throw new Error('Unable to load support requests');
         }
 
         const data = await response.json();
-        requests = data.requests || [];
+        const newRequests = data.requests || [];
 
+        // Check if there are new messages
+        const hasNewMessages = newRequests.length > requests.length;
+
+        requests = newRequests;
         loadingDiv.style.display = 'none';
 
         if (requests.length === 0) {
           emptyDiv.style.display = 'block';
+          listDiv.style.display = 'none';
           updateStats();
           return;
         }
@@ -390,11 +442,18 @@
         displayRequests(requests);
         updateStats();
 
+        // Show subtle indicator for new messages (optional)
+        if (silentRefresh && hasNewMessages) {
+          document.title = `(${requests.filter(r => r.status === 'new').length}) Support Requests`;
+        }
+
       } catch (error) {
         console.error('Error loading support requests:', error);
-        loadingDiv.style.display = 'none';
-        errorDiv.textContent = `Error: ${error.message}. Please refresh the page.`;
-        errorDiv.style.display = 'block';
+        if (!silentRefresh) {
+          loadingDiv.style.display = 'none';
+          errorDiv.textContent = `Unable to load support requests. ${error.message}`;
+          errorDiv.style.display = 'block';
+        }
       }
     }
 
@@ -408,7 +467,18 @@
             <div class="request-meta">
               <div class="request-time">${formatTime(req.createdAt)}</div>
               <div class="request-user">${escapeHtml(req.name)}</div>
-              <div class="request-phone">${escapeHtml(req.phone)}</div>
+              <div class="request-phone">
+                ${escapeHtml(req.phone)}
+                ${req.phone !== 'Anonymous' ? `
+                  <button
+                    class="copy-phone-btn"
+                    onclick="copyPhone('${escapeHtml(req.phone)}', this)"
+                    title="Copy phone number"
+                  >
+                    Copy
+                  </button>
+                ` : ''}
+              </div>
             </div>
             <span class="status-badge ${req.status}">${getStatusLabel(req.status)}</span>
           </div>
@@ -471,7 +541,8 @@
         });
 
         if (!response.ok) {
-          throw new Error('Failed to update status');
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to update status');
         }
 
         // Reload requests
@@ -479,7 +550,29 @@
 
       } catch (error) {
         console.error('Error updating status:', error);
-        alert(`Failed to update status: ${error.message}`);
+        const errorDiv = document.getElementById('error');
+        errorDiv.textContent = `Failed to update status: ${error.message}`;
+        errorDiv.style.display = 'block';
+        setTimeout(() => {
+          errorDiv.style.display = 'none';
+        }, 5000);
+      }
+    }
+
+    window.copyPhone = async function(phone, btnElement) {
+      try {
+        await navigator.clipboard.writeText(phone);
+        const originalText = btnElement.textContent;
+        btnElement.textContent = 'Copied!';
+        btnElement.classList.add('copied');
+
+        setTimeout(() => {
+          btnElement.textContent = originalText;
+          btnElement.classList.remove('copied');
+        }, 2000);
+      } catch (error) {
+        console.error('Failed to copy:', error);
+        alert('Failed to copy phone number');
       }
     }
 
