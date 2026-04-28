@@ -10,7 +10,7 @@
 <body>
   <!-- Version Badge -->
   <div style="position: fixed; top: 10px; right: 10px; background: rgba(76, 175, 80, 0.9); color: white; padding: 6px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
-    v2.2.2 - Login Redirect Fix
+    v2.2.3 - Sport Selection
   </div>
 
   <div class="auth-container">
@@ -337,7 +337,7 @@
         sessionStorage.removeItem('pendingInviteCode');
         window.location.href = `/join/${pendingInviteCode}`;
       } else {
-        window.location.href = '/my-teams.html';
+        window.location.href = '/sport-selection.html';
       }
     } else {
 
@@ -594,7 +594,7 @@
           window.location.href = `/join/${pendingInviteCode}`;
           return;
         }
-        window.location.href = '/my-teams.html';
+        window.location.href = '/sport-selection.html';
       } catch (error) {
         console.error('Request failed:', error);
         // Only show network error if it's actually a network error
@@ -642,7 +642,7 @@
           window.location.href = `/join/${pendingInviteCode}`;
           return;
         }
-        window.location.href = '/my-teams.html';
+        window.location.href = '/sport-selection.html';
       } catch (error) {
         console.error('Request failed:', error);
         // Only show network error if it's actually a network error
@@ -709,7 +709,7 @@
             window.location.href = `/join/${pendingInviteCode}`;
             return;
           }
-          window.location.href = '/my-teams.html';
+          window.location.href = '/sport-selection.html';
         } catch (error) {
           console.error('API error:', error);
           showError(`Network error: ${error.message || 'Connection failed'}. Check browser console for details.`);
