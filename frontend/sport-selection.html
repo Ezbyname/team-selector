@@ -139,14 +139,27 @@
   </div>
 
   <script type="module">
+    console.log('🏀 [sport-selection.html] Page loaded');
+
+    // Intercept all redirects
+    const originalReplace = window.location.replace;
+    const originalHref = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window.location), 'href');
+    Object.defineProperty(window.location, 'href', {
+      set: function(value) {
+        console.log('🚀 [REDIRECT] Jumping to:', value, new Error().stack);
+        originalHref.set.call(this, value);
+      }
+    });
+
     // Check authentication
     const accessToken = localStorage.getItem('team_selector_token');
-    console.log('🏀 Sport-selection.html - Auth check:', { token: accessToken ? '✓ EXISTS' : '✗ MISSING', tokenValue: accessToken?.substring(0, 20) });
+    console.log('🏀 [sport-selection.html] Auth check:', accessToken ? '✓ Token exists' : '✗ No token');
+
     if (!accessToken) {
-      console.log('🏀 Sport-selection.html - No token, redirecting to login');
+      console.log('🏀 [sport-selection.html] No token - redirecting to login');
       window.location.href = '/login.html';
     } else {
-      console.log('🏀 Sport-selection.html - Token found, staying on page');
+      console.log('🏀 [sport-selection.html] Token found - page should stay here');
     }
 
     function logout() {
