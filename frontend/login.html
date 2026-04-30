@@ -330,9 +330,11 @@
 
     // Check if already logged in
     const token = getToken();
+    console.log('🔐 Login.html - Token check:', { token: token ? '✓ EXISTS' : '✗ MISSING', tokenValue: token?.substring(0, 20) });
     if (token) {
       // Check for pending invite code redirect
       const pendingInviteCode = sessionStorage.getItem('pendingInviteCode');
+      console.log('🔐 Login.html - Redirecting (already logged in):', { pendingInviteCode, redirectTo: pendingInviteCode ? `/join/${pendingInviteCode}` : '/sport-selection.html' });
       if (pendingInviteCode) {
         sessionStorage.removeItem('pendingInviteCode');
         window.location.href = `/join/${pendingInviteCode}`;

@@ -141,8 +141,12 @@
   <script type="module">
     // Check authentication
     const accessToken = localStorage.getItem('team_selector_token');
+    console.log('🏀 Sport-selection.html - Auth check:', { token: accessToken ? '✓ EXISTS' : '✗ MISSING', tokenValue: accessToken?.substring(0, 20) });
     if (!accessToken) {
+      console.log('🏀 Sport-selection.html - No token, redirecting to login');
       window.location.href = '/login.html';
+    } else {
+      console.log('🏀 Sport-selection.html - Token found, staying on page');
     }
 
     function logout() {
