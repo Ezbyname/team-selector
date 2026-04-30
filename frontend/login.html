@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Team Selector</title>
+  <script>
+    console.log('🔐 [login.html] PAGE LOADING - token exists:', !!localStorage.getItem('team_selector_token'));
+  </script>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="auth.css">
 </head>
@@ -330,11 +333,9 @@
 
     // Check if already logged in
     const token = getToken();
-    console.log('🔐 Login.html - Token check:', { token: token ? '✓ EXISTS' : '✗ MISSING', tokenValue: token?.substring(0, 20) });
     if (token) {
       // Check for pending invite code redirect
       const pendingInviteCode = sessionStorage.getItem('pendingInviteCode');
-      console.log('🔐 Login.html - Redirecting (already logged in):', { pendingInviteCode, redirectTo: pendingInviteCode ? `/join/${pendingInviteCode}` : '/sport-selection.html' });
       if (pendingInviteCode) {
         sessionStorage.removeItem('pendingInviteCode');
         window.location.href = `/join/${pendingInviteCode}`;
