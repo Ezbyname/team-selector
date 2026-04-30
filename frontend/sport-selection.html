@@ -140,13 +140,13 @@
 
   <script type="module">
     // Check authentication
-    const accessToken = localStorage.getItem('accessToken');
+    const accessToken = localStorage.getItem('team_selector_token');
     if (!accessToken) {
       window.location.href = '/login.html';
     }
 
     function logout() {
-      localStorage.removeItem('accessToken');
+      localStorage.removeItem('team_selector_token');
       localStorage.removeItem('user');
       window.location.href = '/login.html';
     }

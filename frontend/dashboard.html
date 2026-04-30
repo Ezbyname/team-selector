@@ -248,7 +248,7 @@
       });
 
     // Check authentication
-    const accessToken = localStorage.getItem('accessToken');
+    const accessToken = localStorage.getItem('team_selector_token');
     if (!accessToken) {
       window.location.href = '/login.html';
     }
@@ -269,7 +269,7 @@
 
         if (!response.ok) {
           if (response.status === 401) {
-            localStorage.removeItem('accessToken');
+            localStorage.removeItem('team_selector_token');
             localStorage.removeItem('user');
             window.location.href = '/login.html';
             return;
@@ -358,7 +358,7 @@
     }
 
     function logout() {
-      localStorage.removeItem('accessToken');
+      localStorage.removeItem('team_selector_token');
       localStorage.removeItem('user');
       localStorage.removeItem('lastTeamId');
       window.location.href = '/login.html';
